@@ -1,0 +1,48 @@
+@"
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+
+# Node
+node_modules/
+dist/
+build/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE and operating system
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+"@ | Set-Content .gitignore
+
+
+# Environment variables and secrets
+**/.env
+**/.env.*
+
+# Python
+**/.venv/
+**/__pycache__/
+
+# Node
+**/node_modules/
+**/dist/
+
+*.log
+"@ | Add-Content .gitignore
