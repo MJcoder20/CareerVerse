@@ -194,6 +194,23 @@ Open:
 
 `http://localhost:5173`
 
+## Screenshots
+
+### Dashboard
+![CareerVerse Dashboard](screenshots/dashboard.png)
+
+### Career Discovery
+![Career Discovery](screenshots/career-discovery.png)
+
+### Interactive Career Simulation
+![Software Engineer Simulation](screenshots/simulation.png)
+
+### Skill Assessment & Roadmap
+![Assessment and Skill Roadmap](screenshots/assessment1.0.png)
+
+![Assessment and Skill Roadmap](screenshots/assessment1.1.png)
+
+
 ## Application Workflow
 
 1. Register or log in.
