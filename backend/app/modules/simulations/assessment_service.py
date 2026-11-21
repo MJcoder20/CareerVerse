@@ -111,9 +111,6 @@ def generate_assessment(db: Session, session: SimulationSession):
             strengths.append(
                 f"Strong {label.lower()} demonstrated during the simulation."
             )
-            improvement_areas.append(
-                f"Continue challenging your {label.lower()} skills with more complex scenarios."
-            )
 
         elif percentage >= 65:
             level = "intermediate"
@@ -123,6 +120,7 @@ def generate_assessment(db: Session, session: SimulationSession):
             improvement_areas.append(
                 f"Improve consistency in {label.lower()} when handling complex situations."
             )
+
 
         else:
             level = "beginner"

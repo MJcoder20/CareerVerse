@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 
+from app.models.achievement import UserAchievement
 from app.models.user import User
 from app.models.simulation import SimulationSession
 
@@ -64,6 +65,104 @@ def get_simulation_history(
         for session in sessions
     ]
 
+ACHIEVEMENT_CATALOG = {
+    "first_simulation": {
+        "title": "First Steps",
+        "description": "Complete your first career simulation.",
+        "target": 1,
+        "type": "simulations",
+        "xp_reward": 50,
+    },
+    "career_explorer_3": {
+        "title": "Career Explorer",
+        "description": "Complete 3 career simulations.",
+        "target": 3,
+        "type": "simulations",
+        "xp_reward": 100,
+    },
+    "rising_professional_5": {
+        "title": "Rising Professional",
+        "description": "Complete 5 career simulations.",
+        "target": 5,
+        "type": "simulations",
+        "xp_reward": 150,
+    },
+    "high_performer_27": {
+        "title": "High Performer",
+        "description": "Score at least 27 points in a simulation.",
+        "target": 27,
+        "type": "score",
+        "xp_reward": 75,
+    },
+}
+
+
+@router.get("/progress")
+def get_user_progress(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    completed_count = (
+        db.query(SimulationSession)
+        .filter(
+            SimulationSession.user_id == current_user.id,
+            SimulationSession.status == "completed",
+        )
+        .count()
+    )
+
+    achievements = (
+        db.query(UserAchievement)
+        .filter(UserAchievement.user_id == current_user.id)
+        .order_by(UserAchievement.unlocked_at.desc())
+        .all()
+    )
+
+
+    total_xp = current_user.total_xp
+    level = (total_xp // 500) + 1
+    xp_in_level = total_xp % 500
+
+    return {
+        "total_xp": total_xp,
+        "level": level,
+        "xp_in_level": xp_in_level,
+        "xp_to_next_level": 500 - xp_in_level,
+        "level_progress": (xp_in_level / 500) * 100,
+        "completed_simulations": completed_count,
+        "achievements": [
+            {
+                "key": key,
+                **details,
+                "unlocked": any(
+                    achievement.achievement_key == key
+                    for achievement in achievements
+                ),
+                "unlocked_at": next(
+                    (
+                        achievement.unlocked_at
+                        for achievement in achievements
+                        if achievement.achievement_key == key
+                    ),
+                    None,
+                ),
+                "progress": (
+                    min(completed_count, details["target"])
+                    if details["type"] == "simulations"
+                    else (
+                        details["target"]
+                        if any(
+                            achievement.achievement_key == key
+                            for achievement in achievements
+                        )
+                        else 0
+                    )
+                ),
+            }
+            for key, details in ACHIEVEMENT_CATALOG.items()
+        ],
+    }
+
 @router.get("/{session_id}", response_model=SimulationResponse)
 def get_simulation(
     session_id: int,
@@ -95,10 +194,15 @@ async def make_decision(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    session = db.query(SimulationSession).filter(
-        SimulationSession.id == session_id,
-        SimulationSession.user_id == current_user.id,
-    ).first()
+    session = (
+        db.query(SimulationSession)
+        .filter(
+            SimulationSession.id == session_id,
+            SimulationSession.user_id == current_user.id,
+        )
+        .with_for_update()
+        .first()
+    )
 
     if not session:
         raise HTTPException(
@@ -171,4 +275,3 @@ def get_simulation_assessment(
         "summary": assessment.summary,
         "created_at": assessment.created_at,
     }
-

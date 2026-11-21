@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
@@ -10,6 +9,7 @@ import {
   TrendingUp,
   Briefcase,
   BookOpen,
+    Trophy,
 } from "lucide-react";
 
 import { assessmentService } from "../services/assessmentService";
@@ -81,13 +81,14 @@ export default function Assessment() {
     };
   }, [sessionId]);
 
-
   async function toggleTask(taskId: string) {
     if (!sessionId) return;
 
+    const previousTasks = { ...completedTasks };
+
     const updatedTasks = {
-      ...completedTasks,
-      [taskId]: !completedTasks[taskId],
+      ...previousTasks,
+      [taskId]: !previousTasks[taskId],
     };
 
     setCompletedTasks(updatedTasks);
@@ -101,7 +102,10 @@ export default function Assessment() {
       );
 
       setSaveStatus("All progress saved.");
-    } catch {
+    } catch (error) {
+      console.error("Roadmap progress save failed:", error);
+
+      setCompletedTasks(previousTasks);
       setSaveStatus("");
       setSaveError("Unable to save progress. Please try again.");
     }
@@ -143,6 +147,10 @@ export default function Assessment() {
     ? Math.round((completedCount / allTasks.length) * 100)
     : 0;
 
+  const isRoadmapComplete =
+    allTasks.length > 0 &&
+    allTasks.every((taskId) => completedTasks[taskId]);
+
   return (
     <main className="assessment-page">
       <header className="assessment-header">
@@ -183,25 +191,42 @@ export default function Assessment() {
         <h2><Target size={21} /> Skill breakdown</h2>
 
         <div className="assessment-skills">
-          {Object.entries(assessment.skill_scores).map(([key, skill]) => (
-            <article className="assessment-skill" key={key}>
-              <div className="assessment-skill-heading">
-                <strong>{skill.label}</strong>
-                <span>{skill.percentage}%</span>
-              </div>
+          {Object.entries(assessment.skill_scores).map(([key, skill]) => {
+            const percentage = skill.percentage;
 
-              <div className="assessment-progress">
-                <div
-                  className="assessment-progress-fill"
-                  style={{ width: `${skill.percentage}%` }}
-                />
-              </div>
+            const level =
+              percentage >= 85
+                ? "advanced"
+                : percentage >= 65
+                ? "intermediate"
+                : "beginner";
 
-              <small>
-                {skill.score}/{skill.max_score} points
-              </small>
-            </article>
-          ))}
+            return (
+              <article className="assessment-skill" key={key}>
+                <div className="assessment-skill-heading">
+                  <strong>{skill.label}</strong>
+
+                  <div className="skill-heading-right">
+                    <span className={`assessment-level ${level}`}>
+                      {level}
+                    </span>
+                    <span>{percentage}%</span>
+                  </div>
+                </div>
+
+                <div className="assessment-progress">
+                  <div
+                    className="assessment-progress-fill"
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+
+                <small>
+                  {skill.score}/{skill.max_score} points
+                </small>
+              </article>
+            );
+          })}
         </div>
       </section>
 
@@ -222,12 +247,25 @@ export default function Assessment() {
         <h2><TrendingUp size={21} /> Improvement areas</h2>
 
         <div className="assessment-list">
-          {assessment.improvement_areas.map((item, index) => (
-            <div className="assessment-list-item" key={index}>
-              <Target size={18} />
-              <p>{item}</p>
+          {assessment.improvement_areas.length > 0 ? (
+            assessment.improvement_areas.map((item, index) => (
+              <div className="assessment-list-item" key={index}>
+                <Target size={18} />
+                <p>{item}</p>
+              </div>
+            ))
+          ) : (
+            <div className="assessment-no-improvements">
+              <CheckCircle size={20} />
+              <div>
+                <strong>Excellent work!</strong>
+                <p>
+                  No major improvement areas were identified.
+                  Keep practicing to maintain your progress.
+                </p>
+              </div>
             </div>
-          ))}
+          )}
         </div>
       </section>
 
@@ -261,15 +299,16 @@ export default function Assessment() {
         </p>
 
         {saveStatus && (
-          <p className="roadmap-task-count" role="status">
+          <span className="save-status">
+            <CheckCircle size={15} />
             {saveStatus}
-          </p>
+          </span>
         )}
 
         {saveError && (
-          <p className="assessment-error" role="alert">
+          <span className="save-status save-error">
             {saveError}
-          </p>
+          </span>
         )}
 
         {assessment.recommendations.map((item) => {
@@ -308,6 +347,18 @@ export default function Assessment() {
               <h4>Learning tasks</h4>
 
               <div className="roadmap-tasks">
+                {isRoadmapComplete && (
+                  <div className="roadmap-completion-banner">
+                    <Trophy size={24} />
+                    <div>
+                      <h3>Congratulations! 🎉</h3>
+                      <p>
+                        You've completed your entire learning roadmap.
+                        Keep building on your skills and achievements!
+                      </p>
+                    </div>
+                  </div>
+                )}
                 {item.learning_tasks.map((task, index) => {
                   const taskId = `${item.skill}-${index}`;
 

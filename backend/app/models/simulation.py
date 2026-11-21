@@ -1,4 +1,3 @@
-
 from sqlalchemy import (
     Column,
     Integer,
@@ -6,6 +5,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     JSON,
+    Boolean,
     func,
 )
 from app.core.database import Base
@@ -36,6 +36,8 @@ class SimulationSession(Base):
     score = Column(Integer, default=0, nullable=False)
 
     state = Column(JSON, default=dict, nullable=False)
+
+    xp_awarded = Column(Boolean, default=False, nullable=False)
 
     created_at = Column(
         DateTime(timezone=True),

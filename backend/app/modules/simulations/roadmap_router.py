@@ -46,13 +46,20 @@ def get_owned_assessment(
     return assessment
 
 
-def get_valid_task_ids():
-    return {
-        f"{skill}-{index}"
-        for skill, roadmap in SKILL_ROADMAPS.items()
-        for index, _ in enumerate(roadmap["tasks"])
-    }
+def get_valid_task_ids(assessment: Assessment):
+    valid_ids = set()
 
+    for recommendation in assessment.recommendations or []:
+        skill = recommendation.get("skill")
+        tasks = recommendation.get("learning_tasks", [])
+
+        if not skill:
+            continue
+
+        for index, _ in enumerate(tasks):
+            valid_ids.add(f"{skill}-{index}")
+
+    return valid_ids
 
 @router.get("/{session_id}/roadmap-progress")
 def get_roadmap_progress(
@@ -76,7 +83,7 @@ def update_roadmap_progress(
 ):
     assessment = get_owned_assessment(session_id, db, current_user)
 
-    valid_task_ids = get_valid_task_ids()
+    valid_task_ids = get_valid_task_ids(assessment)
     submitted_task_ids = set(data.completed_tasks.keys())
 
     invalid_task_ids = submitted_task_ids - valid_task_ids
@@ -87,7 +94,14 @@ def update_roadmap_progress(
             detail=f"Invalid roadmap task IDs: {sorted(invalid_task_ids)}"
         )
 
-    assessment.roadmap_progress = data.completed_tasks
+    assessment.roadmap_progress = {
+        **(assessment.roadmap_progress or {}),
+        **data.completed_tasks,
+    }
+
+    db.add(assessment)
+    db.commit()
+    db.refresh(assessment)
 
     db.commit()
     db.refresh(assessment)

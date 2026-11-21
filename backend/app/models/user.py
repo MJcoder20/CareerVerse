@@ -11,3 +11,6 @@ class User(Base):
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     hashed_password = Column(String(255), nullable=False)
+
+    # Persistent gamification
+    total_xp = Column(Integer, default=0, nullable=False)

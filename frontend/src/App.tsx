@@ -2,6 +2,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Assessment from "./pages/Assessment";
+import Achievements from "./pages/Achievements";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -28,6 +29,7 @@ function App() {
             path="/assessment/:sessionId"
             element={<Assessment />}
           />
+          <Route path="/achievements" element={<Achievements />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

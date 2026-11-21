@@ -26,6 +26,10 @@ class SimulationOption(BaseModel):
     id: str
     label: str
 
+class LevelUpData(BaseModel):
+    previous_level: int
+    new_level: int
+    xp_earned: int
 
 class SimulationResponse(BaseModel):
     session_id: int
@@ -33,9 +37,14 @@ class SimulationResponse(BaseModel):
     scenario: str
     status: str
     current_step: int
+    total_steps: int
+    completed_steps: int
+    progress: int
     score: int
     title: str
     message: str
     options: list[SimulationOption]
     feedback: str | None = None
     manager_dialogue: str | None = None
+    level_up: LevelUpData | None = None
+    newly_unlocked_achievements: list[str] = []
