@@ -1,5 +1,5 @@
-
 import httpx
+import json
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
 OLLAMA_MODEL = "qwen2.5:3b"
@@ -77,3 +77,90 @@ Rules:
 
     except (httpx.HTTPError, ValueError, KeyError):
         return fallback
+
+
+
+async def generate_career_coaching(context: dict) -> str:
+    context_json = json.dumps(
+        context,
+        ensure_ascii=False,
+        default=str,
+    )
+
+    prompt = f"""
+You are CareerVerse, an experienced AI career coach.
+
+Analyze the following verified user data:
+
+{context_json}
+
+Create personalized career coaching advice.
+
+Your response must include:
+
+1. CURRENT PERFORMANCE
+Briefly explain the user's current progress.
+
+2. PRIORITY SKILLS
+Identify the most important skills to improve based on assessment data.
+
+3. ACTION PLAN
+Give three practical actions the user can take next.
+Make the actions relevant to their target career.
+
+4. ENCOURAGEMENT
+End with a short, realistic motivational message.
+
+Rules:
+- Use only the information provided.
+- Never invent achievements, scores, experience, or completed activities.
+- Do not claim the user has improved unless the data supports it.
+- Prioritize actual weaknesses and assessment recommendations.
+- Keep advice practical, specific, and professional.
+- If assessment history is limited, acknowledge that limitation.
+- Keep the response under 350 words.
+"""
+
+    fallback = (
+        "Your career development journey is underway. "
+        "Review your latest assessment, focus on the skills "
+        "with the lowest scores, and complete another relevant "
+        "simulation to build a more reliable performance history."
+    )
+
+    try:
+        async with httpx.AsyncClient(timeout=90.0) as client:
+            response = await client.post(
+                OLLAMA_URL,
+                json={
+                    "model": OLLAMA_MODEL,
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": (
+                                "You are a professional and evidence-based "
+                                "AI career coach. Never invent user data."
+                            ),
+                        },
+                        {
+                            "role": "user",
+                            "content": prompt,
+                        },
+                    ],
+                    "stream": False,
+                    "options": {
+                        "temperature": 0.4,
+                        "num_predict": 600,
+                    },
+                },
+            )
+
+            response.raise_for_status()
+
+            coaching = response.json()["message"]["content"].strip()
+
+            return coaching or fallback
+
+    except (httpx.HTTPError, ValueError, KeyError):
+        return fallback
+

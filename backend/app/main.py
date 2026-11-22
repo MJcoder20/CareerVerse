@@ -4,6 +4,7 @@ from app.modules.auth.router import router as auth_router
 from app.modules.discovery.router import router as discovery_router
 from app.modules.simulations.router import router as simulations_router
 from app.modules.goals.router import router as goals_router
+from app.modules.career_coach.router import router as career_coach_router
 from app.modules.simulations.roadmap_router import router as roadmap_router
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -32,6 +33,11 @@ app.include_router(
     goals_router,
     prefix="/api/v1/goals",
     tags=["Career Goals"],
+)
+app.include_router(
+    career_coach_router,
+    prefix="/api/v1/career-coach",
+    tags=["AI Career Coach"],
 )
 
 app.add_middleware(
