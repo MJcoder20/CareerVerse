@@ -86,6 +86,44 @@ export default function Dashboard() {
 
   const recentActivity = history.slice(0, 4);
 
+  // Career Readiness Score
+  const simulationExperienceScore = Math.min(
+    (progress?.completed_simulations ?? 0) / 10,
+    1
+  ) * 100;
+
+  const simulationPerformanceScore = Math.min(
+    averageScore,
+    100
+  );
+
+  const xpProgressScore = Math.min(
+    (progress?.total_xp ?? 0) / 2000,
+    1
+  ) * 100;
+
+  const achievementScore =
+    (progress?.achievements?.length ?? 0) > 0
+      ? (progress!.achievements.filter((item) => item.unlocked).length /
+          progress!.achievements.length) * 100
+      : 0;
+
+  const careerReadinessScore = Math.round(
+    simulationExperienceScore * 0.3 +
+    simulationPerformanceScore * 0.3 +
+    xpProgressScore * 0.2 +
+    achievementScore * 0.2
+  );
+
+  const readinessLabel =
+    careerReadinessScore >= 80
+      ? "Career Ready"
+      : careerReadinessScore >= 60
+      ? "Almost There"
+      : careerReadinessScore >= 40
+      ? "Making Progress"
+      : "Just Getting Started";
+
   const firstName = user?.full_name?.split(" ")[0] || "Explorer";
   const initials = user?.full_name
     ?.split(" ")
@@ -475,6 +513,66 @@ export default function Dashboard() {
                   </button>
                 </div>
               )}
+            </section>
+
+          )}
+          {!progressLoading && !historyLoading && (
+            <section className="cv-section career-readiness-section">
+              <div className="cv-section-heading">
+                <div>
+                  <div className="cv-section-kicker">
+                    <Sparkles size={15} /> YOUR PROFESSIONAL GROWTH
+                  </div>
+                  <h2>Career Readiness</h2>
+                </div>
+                <span className="career-readiness-label">
+                  {readinessLabel}
+                </span>
+              </div>
+
+              <div className="cv-panel career-readiness-panel">
+                <div className="career-readiness-main">
+                  <div
+                    className="career-readiness-circle"
+                    style={{
+                      background: `conic-gradient(var(--primary) ${careerReadinessScore * 3.6}deg, var(--border) 0deg)`,
+                    }}
+                  >
+                    <div className="career-readiness-circle-inner">
+                      <strong>{careerReadinessScore}%</strong>
+                      <span>Readiness</span>
+                    </div>
+                  </div>
+
+                  <div className="career-readiness-description">
+                    <h3>{readinessLabel}</h3>
+                    <p>
+                      Your readiness score reflects your simulation experience,
+                      performance, XP progression, and achievements.
+                      Keep learning and completing simulations to improve it.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="career-readiness-breakdown">
+                  <div>
+                    <span>Simulation experience</span>
+                    <strong>{Math.round(simulationExperienceScore)}%</strong>
+                  </div>
+                  <div>
+                    <span>Simulation performance</span>
+                    <strong>{Math.round(simulationPerformanceScore)}%</strong>
+                  </div>
+                  <div>
+                    <span>XP progression</span>
+                    <strong>{Math.round(xpProgressScore)}%</strong>
+                  </div>
+                  <div>
+                    <span>Achievement completion</span>
+                    <strong>{Math.round(achievementScore)}%</strong>
+                  </div>
+                </div>
+              </div>
             </section>
           )}
 
