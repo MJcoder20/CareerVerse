@@ -3,6 +3,7 @@ from app.core.config import settings
 from app.modules.auth.router import router as auth_router
 from app.modules.discovery.router import router as discovery_router
 from app.modules.simulations.router import router as simulations_router
+from app.modules.goals.router import router as goals_router
 from app.modules.simulations.roadmap_router import router as roadmap_router
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -26,6 +27,11 @@ app.include_router(
 app.include_router(
     roadmap_router,
     prefix="/api/v1",
+)
+app.include_router(
+    goals_router,
+    prefix="/api/v1/goals",
+    tags=["Career Goals"],
 )
 
 app.add_middleware(

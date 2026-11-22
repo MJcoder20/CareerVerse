@@ -14,7 +14,7 @@ import {
   Compass,
   LogOut,
   X,
-  History as HistoryIcon, Menu,
+  History as HistoryIcon, Menu, ArrowUpRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -54,12 +54,75 @@ export default function Achievements() {
       .finally(() => setLoading(false));
   }, []);
 
+  const getAchievementRarity = (key: string) => {
+    switch (key) {
+      case "first_simulation":
+        return {
+          label: "Common",
+          className: "common",
+        };
+
+      case "career_explorer_3":
+      case "high_performer_27":
+        return {
+          label: "Rare",
+          className: "rare",
+        };
+
+      case "rising_professional_5":
+        return {
+          label: "Epic",
+          className: "epic",
+        };
+
+      default:
+        return {
+          label: "Common",
+          className: "common",
+        };
+    }
+  };
   const achievements = progress?.achievements ?? [];
   const unlockedCount = achievements.filter((item) => item.unlocked).length;
 
+  const totalAchievements = achievements.length;
+
+  const completionPercentage =
+    totalAchievements > 0
+      ? Math.round((unlockedCount / totalAchievements) * 100)
+      : 0;
+
+  const achievementXpEarned = achievements
+    .filter((achievement) => achievement.unlocked)
+    .reduce((total, achievement) => total + achievement.xp_reward, 0);
+
+  const remainingAchievements = totalAchievements - unlockedCount;
   const [selectedAchievement, setSelectedAchievement] = useState<
     (typeof achievements)[number] | null
   >(null);
+
+  const [achievementFilter, setAchievementFilter] = useState<
+    "all" | "unlocked" | "locked" | "simulations" | "score"
+  >("all");
+
+  const filteredAchievements = achievements.filter((achievement) => {
+    switch (achievementFilter) {
+      case "unlocked":
+        return achievement.unlocked;
+
+      case "locked":
+        return !achievement.unlocked;
+
+      case "simulations":
+        return achievement.type === "simulations";
+
+      case "score":
+        return achievement.type === "score";
+
+      default:
+        return true;
+    }
+  });
 
   const unlockedTimeline = achievements
     .filter((achievement) => achievement.unlocked && achievement.unlocked_at)
@@ -126,6 +189,17 @@ export default function Achievements() {
           <button className="cv-nav-item active">
             <Trophy size={19} />
             <span>Achievements</span>
+          </button>
+          <button
+            className="cv-nav-item"
+            onClick={() => {
+              navigate("/goals");
+              closeSidebar();
+            }}
+          >
+            <Target size={19} />
+            <span>Career Goals</span>
+            <ArrowUpRight size={15} className="cv-nav-arrow" />
           </button>
         </nav>
 
@@ -203,6 +277,56 @@ export default function Achievements() {
               <p className="cv-empty-text">Loading achievements...</p>
             ) : (
               <>
+                <section className="achievement-statistics">
+                  <div className="cv-panel-heading">
+                    <div>
+                      <span className="cv-section-kicker">YOUR PROGRESS</span>
+                      <h3>Achievement Statistics</h3>
+                    </div>
+                    <div className="cv-panel-icon">
+                      <Trophy size={19} />
+                    </div>
+                  </div>
+
+                  <div className="achievement-statistics-grid">
+                    <div className="achievement-stat-card">
+                      <span>Total Achievements</span>
+                      <strong>{totalAchievements}</strong>
+                      <small>Available milestones</small>
+                    </div>
+
+                    <div className="achievement-stat-card">
+                      <span>Unlocked</span>
+                      <strong>{unlockedCount}</strong>
+                      <small>{remainingAchievements} remaining</small>
+                    </div>
+
+                    <div className="achievement-stat-card">
+                      <span>Completion Rate</span>
+                      <strong>{completionPercentage}%</strong>
+                      <small>Overall achievement progress</small>
+                    </div>
+
+                    <div className="achievement-stat-card">
+                      <span>Achievement XP</span>
+                      <strong>{achievementXpEarned}</strong>
+                      <small>XP earned from milestones</small>
+                    </div>
+                  </div>
+
+                  <div className="achievement-statistics-progress">
+                    <div className="achievement-progress-label">
+                      <span>Overall completion</span>
+                      <strong>{unlockedCount}/{totalAchievements}</strong>
+                    </div>
+                    <div className="achievement-progress-track">
+                      <div
+                        className="achievement-progress-fill"
+                        style={{ width: `${completionPercentage}%` }}
+                      />
+                    </div>
+                  </div>
+                </section>
                 <div className="achievement-summary">
                   <div>
                     <Trophy size={25} />
@@ -216,8 +340,30 @@ export default function Achievements() {
                   </div>
                 </div>
 
+                <div className="achievement-filters">
+                  {(
+                    [
+                      ["all", "All"],
+                      ["unlocked", "Unlocked"],
+                      ["locked", "Locked"],
+                      ["simulations", "Simulation Milestones"],
+                      ["score", "High Scores"],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <button
+                      key={value}
+                      className={`achievement-filter ${
+                        achievementFilter === value ? "active" : ""
+                      }`}
+                      onClick={() => setAchievementFilter(value)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
                 <div className="achievements-grid">
-                  {achievements.map((achievement) => (
+                  {filteredAchievements.map((achievement) => (
                     <article
                       className={`achievement-card ${
                         achievement.unlocked ? "unlocked" : "locked"
@@ -248,7 +394,13 @@ export default function Achievements() {
                           </span>
                         )}
                       </div>
-
+                      <span
+                        className={`achievement-rarity ${getAchievementRarity(
+                          achievement.key
+                        ).className}`}
+                      >
+                        {getAchievementRarity(achievement.key).label}
+                      </span>
                       <h3>{achievement.title}</h3>
                       <p>{achievement.description}</p>
                       <div className="achievement-xp-reward">
@@ -291,6 +443,17 @@ export default function Achievements() {
                       )}
                     </article>
                   ))}
+
+                  {filteredAchievements.length === 0 && (
+                    <div className="achievement-filter-empty">
+                      <Trophy size={30} />
+                      <strong>No achievements found</strong>
+                      <p>
+                        There are no achievements in this category yet.
+                        Try another filter.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <section className="achievement-timeline-section">
@@ -373,7 +536,13 @@ export default function Achievements() {
                       <span className="cv-section-kicker">
                         ACHIEVEMENT DETAILS
                       </span>
-
+                      <span
+                        className={`achievement-rarity ${getAchievementRarity(
+                          selectedAchievement.key
+                        ).className}`}
+                      >
+                        {getAchievementRarity(selectedAchievement.key).label}
+                      </span>
                       <h2 id="achievement-modal-title">
                         {selectedAchievement.title}
                       </h2>

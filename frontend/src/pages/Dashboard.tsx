@@ -18,7 +18,8 @@ import {
   TrendingUp,
   Menu,
   X,
-  Award,
+  Award, CheckCircle,
+    Lock,
 } from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
@@ -26,6 +27,10 @@ import {
   simulationService,
   type UserProgress,
 } from "../services/simulation";
+import {
+  getCareerGoal,
+  type CareerGoal,
+} from "../services/goals";
 import type { SimulationHistoryItem } from "../types/simulationHistory";
 
 
@@ -40,6 +45,9 @@ export default function Dashboard() {
   const [progressLoading, setProgressLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const [careerGoal, setCareerGoal] = useState<CareerGoal | null>(null);
+  const [goalLoading, setGoalLoading] = useState(true);
+
   useEffect(() => {
     simulationService
       .getHistory()
@@ -52,6 +60,11 @@ export default function Dashboard() {
       .then(setProgress)
       .catch(console.error)
       .finally(() => setProgressLoading(false));
+
+    getCareerGoal()
+      .then(setCareerGoal)
+      .catch(console.error)
+      .finally(() => setGoalLoading(false));
   }, []);
 
   const completed = history.filter(
@@ -112,6 +125,23 @@ export default function Dashboard() {
     }
   }
 
+  const getAchievementRarity = (key: string) => {
+    switch (key) {
+      case "first_simulation":
+        return { label: "Common", className: "common" };
+
+      case "career_explorer_3":
+      case "high_performer_27":
+        return { label: "Rare", className: "rare" };
+
+      case "rising_professional_5":
+        return { label: "Epic", className: "epic" };
+
+      default:
+        return { label: "Common", className: "common" };
+    }
+  };
+
   const unlockedAchievements =
     progress?.achievements.filter((achievement) => achievement.unlocked) ?? [];
 
@@ -120,6 +150,62 @@ export default function Dashboard() {
       new Date(b.unlocked_at ?? 0).getTime() -
       new Date(a.unlocked_at ?? 0).getTime()
   )[0];
+
+  const recentAchievements = (progress?.achievements ?? [])
+    .filter((achievement) => achievement.unlocked)
+    .sort(
+      (a, b) =>
+        new Date(b.unlocked_at ?? 0).getTime() -
+        new Date(a.unlocked_at ?? 0).getTime()
+    )
+    .slice(0, 3);
+
+  const careerMilestones = [
+    {
+      id: "first-simulation",
+      title: "First Career Simulation",
+      description: "Complete your first career simulation.",
+      requirement: 1,
+      current: progress?.completed_simulations ?? 0,
+      unit: "simulations",
+      reward: "Career journey started",
+    },
+    {
+      id: "career-explorer",
+      title: "Career Explorer",
+      description: "Complete 3 career simulations.",
+      requirement: 3,
+      current: progress?.completed_simulations ?? 0,
+      unit: "simulations",
+      reward: "Experienced explorer",
+    },
+    {
+      id: "rising-professional",
+      title: "Rising Professional",
+      description: "Complete 5 career simulations.",
+      requirement: 5,
+      current: progress?.completed_simulations ?? 0,
+      unit: "simulations",
+      reward: "Consistent learner",
+    },
+    {
+      id: "xp-collector",
+      title: "XP Collector",
+      description: "Earn 500 total experience points.",
+      requirement: 500,
+      current: progress?.total_xp ?? 0,
+      unit: "XP",
+      reward: "Level progression",
+    },
+  ];
+
+  const completedMilestones = careerMilestones.filter(
+    (milestone) => milestone.current >= milestone.requirement
+  ).length;
+
+  const nextCareerMilestone = careerMilestones.find(
+    (milestone) => milestone.current < milestone.requirement
+  );
 
   return (
     <div className="cv-dashboard">
@@ -179,6 +265,14 @@ export default function Dashboard() {
           >
             <Trophy size={19} />
             <span>Achievements</span>
+          </button>
+          <button
+            className="cv-nav-item"
+            onClick={() => navigateFromSidebar("/goals")}
+          >
+            <Target size={19} />
+            <span>Career Goals</span>
+            <ArrowUpRight size={15} className="cv-nav-arrow" />
           </button>
         </nav>
 
@@ -300,6 +394,90 @@ export default function Dashboard() {
             </div>
           </section>
 
+          {!goalLoading && (
+            <section className="cv-section career-dashboard-goal">
+              <div className="cv-section-heading">
+                <div>
+                  <div className="cv-section-kicker">
+                    <Target size={15} /> YOUR CAREER JOURNEY
+                  </div>
+                  <h2>Career Goal</h2>
+                </div>
+
+                <button
+                  className="cv-outline-button"
+                  onClick={() => navigate("/goals")}
+                >
+                  {careerGoal ? "Edit goal" : "Set a goal"}
+                  <ArrowUpRight size={16} />
+                </button>
+              </div>
+
+              {careerGoal ? (
+                <div className="cv-panel">
+                  <div className="career-goal-overview">
+                    <div>
+                      <span>Target career role</span>
+                      <h3>{careerGoal.career_role}</h3>
+                    </div>
+                    {careerGoal.is_completed && (
+                      <div className="career-goal-status">
+                        <CheckCircle size={17} />
+                        Goal achieved!
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="career-goal-progress-grid">
+                    <div className="career-goal-progress-card">
+                      <div className="career-goal-progress-icon">
+                        <BriefcaseBusiness size={21} />
+                      </div>
+                      <span>Completed simulations</span>
+                      <strong>
+                        {careerGoal.completed_simulations} / {careerGoal.target_simulations}
+                      </strong>
+                      <div className="cv-progress-track">
+                        <div
+                          className="cv-progress-fill"
+                          style={{ width: `${careerGoal.simulation_progress}%` }}
+                        />
+                      </div>
+                      <small>{careerGoal.simulation_progress}% completed</small>
+                    </div>
+
+                    <div className="career-goal-progress-card">
+                      <div className="career-goal-progress-icon">
+                        <Zap size={21} />
+                      </div>
+                      <span>Experience points</span>
+                      <strong>
+                        {careerGoal.current_xp} / {careerGoal.target_xp} XP
+                      </strong>
+                      <div className="cv-progress-track">
+                        <div
+                          className="cv-progress-fill"
+                          style={{ width: `${careerGoal.xp_progress}%` }}
+                        />
+                      </div>
+                      <small>{careerGoal.xp_progress}% completed</small>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="cv-panel">
+                  <p>You haven't set a career goal yet. Choose your target role and start tracking your progress!</p>
+                  <button
+                    className="cv-primary-button"
+                    onClick={() => navigate("/goals")}
+                  >
+                    Create your career goal <ArrowRight size={17} />
+                  </button>
+                </div>
+              )}
+            </section>
+          )}
+
           <section className="cv-section">
             <div className="cv-section-heading">
               <div>
@@ -414,7 +592,10 @@ export default function Dashboard() {
                         <strong>{achievement.title}</strong>
                         <span>{achievement.description}</span>
                         <small>
-                          Unlocked {new Date(achievement.unlocked_at).toLocaleDateString()}
+                          Unlocked{" "}
+                          {achievement.unlocked_at
+                            ? new Date(achievement.unlocked_at).toLocaleDateString()
+                            : "Date unavailable"}
                         </small>
                       </div>
                       <Star size={15} className="cv-achievement-star" />
@@ -461,6 +642,139 @@ export default function Dashboard() {
               </div>
             )}
 
+            {recentAchievements.length > 0 && (
+              <section className="cv-achievement-showcase">
+                <div className="cv-achievement-showcase-heading">
+                  <div>
+                    <span className="cv-section-kicker">YOUR MILESTONES</span>
+                    <h3>Achievement Showcase</h3>
+                    <p>Your latest career accomplishments.</p>
+                  </div>
+
+                  <button
+                    className="cv-achievement-showcase-link"
+                    onClick={() => navigate("/achievements")}
+                  >
+                    View all <ArrowRight size={15} />
+                  </button>
+                </div>
+
+                <div className="cv-achievement-showcase-grid">
+                  {recentAchievements.map((achievement) => {
+                    const rarity = getAchievementRarity(achievement.key);
+
+                    return (
+                      <div
+                        className="cv-achievement-showcase-card"
+                        key={achievement.key}
+                      >
+                        <div className="cv-achievement-showcase-icon">
+                          {getAchievementIcon(achievement.key)}
+                        </div>
+
+                        <div className="cv-achievement-showcase-info">
+                          <span className={`achievement-rarity ${rarity.className}`}>
+                            {rarity.label}
+                          </span>
+
+                          <strong>{achievement.title}</strong>
+
+                          <span className="cv-achievement-showcase-xp">
+                            <Zap size={13} />
+                            +{achievement.xp_reward} XP
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
+            <section className="cv-career-milestones">
+              <div className="cv-career-milestones-heading">
+                <div>
+                  <span className="cv-section-kicker">CAREER JOURNEY</span>
+                  <h3>Career Progression</h3>
+                  <p>Every milestone brings you closer to your career goals.</p>
+                </div>
+
+                <div className="cv-milestone-completion">
+                  <strong>{completedMilestones}/{careerMilestones.length}</strong>
+                  <span>Completed</span>
+                </div>
+              </div>
+
+              <div className="cv-milestones-list">
+                {careerMilestones.map((milestone) => {
+                  const isCompleted =
+                    milestone.current >= milestone.requirement;
+
+                  const percentage = Math.min(
+                    100,
+                    Math.round(
+                      (milestone.current / milestone.requirement) * 100
+                    )
+                  );
+
+                  const isNext = nextCareerMilestone?.id === milestone.id;
+
+                  return (
+                    <div
+                      className={`cv-milestone-item ${
+                        isCompleted ? "completed" : isNext ? "current" : "upcoming"
+                      }`}
+                      key={milestone.id}
+                    >
+                      <div className="cv-milestone-icon">
+                        {isCompleted ? (
+                          <CheckCircle size={21} />
+                        ) : isNext ? (
+                          <Target size={21} />
+                        ) : (
+                          <Lock size={20} />
+                        )}
+                      </div>
+
+                      <div className="cv-milestone-content">
+                        <div className="cv-milestone-title-row">
+                          <strong>{milestone.title}</strong>
+                          <span>
+                            {isCompleted
+                              ? "Completed"
+                              : isNext
+                                ? "In progress"
+                                : "Upcoming"}
+                          </span>
+                        </div>
+
+                        <p>{milestone.description}</p>
+
+                        <div className="cv-milestone-progress-label">
+                          <span>
+                            {Math.min(milestone.current, milestone.requirement)} /{" "}
+                            {milestone.requirement} {milestone.unit}
+                          </span>
+                          <strong>{percentage}%</strong>
+                        </div>
+
+                        <div className="cv-milestone-progress-track">
+                          <div
+                            className="cv-milestone-progress-fill"
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+
+                        <small>
+                          <Star size={13} />
+                          {milestone.reward}
+                        </small>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
 
             <section className="cv-panel cv-activity-panel">
               <div className="cv-panel-heading">
