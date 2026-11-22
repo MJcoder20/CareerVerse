@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
@@ -162,6 +163,68 @@ def get_user_progress(
             for key, details in ACHIEVEMENT_CATALOG.items()
         ],
     }
+
+
+@router.get("/analytics")
+def get_simulation_analytics(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    # Retrieve assessments belonging to the authenticated user.
+    assessment_rows = (
+        db.query(Assessment, SimulationSession)
+        .join(
+            SimulationSession,
+            Assessment.session_id == SimulationSession.id,
+        )
+        .filter(SimulationSession.user_id == current_user.id)
+        .order_by(Assessment.created_at.asc())
+        .all()
+    )
+
+    history = [
+        {
+            "session_id": assessment.session_id,
+            "career_slug": session.career_slug,
+            "percentage": assessment.percentage,
+            "overall_score": assessment.overall_score,
+            "max_score": assessment.max_score,
+            "created_at": assessment.created_at,
+        }
+        for assessment, session in assessment_rows
+    ]
+
+    scores = [item["percentage"] for item in history]
+
+    # Count completed simulations for each career.
+    career_rows = (
+        db.query(
+            SimulationSession.career_slug,
+            func.count(SimulationSession.id).label("completed_count"),
+        )
+        .filter(
+            SimulationSession.user_id == current_user.id,
+            SimulationSession.status == "completed",
+        )
+        .group_by(SimulationSession.career_slug)
+        .all()
+    )
+
+    return {
+        "total_assessments": len(history),
+        "average_score": round(sum(scores) / len(scores), 2) if scores else 0,
+        "highest_score": max(scores) if scores else 0,
+        "latest_score": scores[-1] if scores else None,
+        "score_history": history,
+        "completed_simulations_by_career": [
+            {
+                "career_slug": career_slug,
+                "completed_count": completed_count,
+            }
+            for career_slug, completed_count in career_rows
+        ],
+    }
+
 
 @router.get("/{session_id}", response_model=SimulationResponse)
 def get_simulation(

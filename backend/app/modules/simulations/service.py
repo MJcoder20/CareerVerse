@@ -364,6 +364,11 @@ def submit_decision(db, session, option_id):
     db.commit()
     db.refresh(session)
 
+    # Automatically generate an assessment after completion.
+    if session.status == "completed":
+        from app.modules.simulations.assessment_service import generate_assessment
+        generate_assessment(db, session)
+
     response = build_response(session, feedback)
 
     if level_up_data:

@@ -5939,3 +5939,167 @@ input {
     flex-direction: column;
   }
 }
+
+/* Career Progress Analytics */
+
+.cv-analytics-section {
+  margin-bottom: 30px;
+}
+
+.cv-analytics-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.cv-analytics-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 22px;
+}
+
+.cv-analytics-stat > span {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.cv-analytics-stat > strong {
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.cv-analytics-stat > small {
+  font-size: 12px;
+}
+
+.cv-analytics-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 18px;
+}
+
+.cv-score-chart,
+.cv-career-analytics {
+  min-width: 0;
+  padding: 24px;
+}
+
+.cv-score-chart-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  gap: 14px;
+  height: 210px;
+  padding: 20px 8px 0;
+}
+
+.cv-score-chart-column {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+  height: 100%;
+  min-width: 0;
+}
+
+.cv-score-chart-column > strong {
+  font-size: 12px;
+}
+
+.cv-score-bar-track {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: min(100%, 42px);
+  height: 145px;
+  overflow: hidden;
+  border-radius: 8px 8px 3px 3px;
+  background: var(--border);
+}
+
+.cv-score-bar-fill {
+  width: 100%;
+  min-height: 5px;
+  border-radius: 8px 8px 3px 3px;
+  background: var(--primary);
+  transition: height 0.4s ease;
+}
+
+.cv-score-chart-column > span {
+  font-size: 11px;
+}
+
+.cv-chart-caption {
+  margin-top: 18px;
+  font-size: 12px;
+}
+
+.cv-career-analytics-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.cv-career-analytics-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 15px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.cv-career-analytics-item > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.cv-career-analytics-item strong {
+  font-size: 14px;
+}
+
+.cv-career-analytics-item span {
+  font-size: 12px;
+}
+
+.cv-career-analytics-item > svg {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+
+@media (max-width: 1024px) {
+  .cv-analytics-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cv-analytics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .cv-analytics-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .cv-analytics-stat {
+    padding: 18px;
+  }
+
+  .cv-score-chart,
+  .cv-career-analytics {
+    padding: 18px;
+  }
+
+  .cv-score-chart-bars {
+    gap: 8px;
+  }
+}

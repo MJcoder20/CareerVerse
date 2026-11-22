@@ -26,6 +26,7 @@ import { useAuth } from "../context/AuthContext";
 import {
   simulationService,
   type UserProgress,
+  type SimulationAnalytics,
 } from "../services/simulation";
 import {
   getCareerGoal,
@@ -41,6 +42,8 @@ export default function Dashboard() {
 
   const [history, setHistory] = useState<SimulationHistoryItem[]>([]);
   const [progress, setProgress] = useState<UserProgress | null>(null);
+  const [analytics, setAnalytics] = useState<SimulationAnalytics | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [progressLoading, setProgressLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -60,6 +63,12 @@ export default function Dashboard() {
       .then(setProgress)
       .catch(console.error)
       .finally(() => setProgressLoading(false));
+
+    simulationService
+      .getAnalytics()
+      .then(setAnalytics)
+      .catch(console.error)
+      .finally(() => setAnalyticsLoading(false));
 
     getCareerGoal()
       .then(setCareerGoal)
@@ -626,6 +635,143 @@ export default function Dashboard() {
                 <div className="cv-stat-bottom">Celebrate your wins</div>
               </article>
             </div>
+          </section>
+
+          <section className="cv-section cv-analytics-section">
+            <div className="cv-section-heading">
+              <div>
+                <span className="cv-section-kicker">
+                  <TrendingUp size={15} /> PERFORMANCE INSIGHTS
+                </span>
+                <h2>Career Progress Analytics</h2>
+              </div>
+              <span className="cv-muted-label">Assessment history</span>
+            </div>
+
+            {analyticsLoading ? (
+              <div className="cv-panel">
+                <p className="cv-empty-text">Loading your analytics...</p>
+              </div>
+            ) : analytics ? (
+              <>
+                <div className="cv-analytics-stats">
+                  <article className="cv-panel cv-analytics-stat">
+                    <span>Average score</span>
+                    <strong>{analytics.average_score}%</strong>
+                    <small>Across all assessments</small>
+                  </article>
+
+                  <article className="cv-panel cv-analytics-stat">
+                    <span>Highest score</span>
+                    <strong>{analytics.highest_score}%</strong>
+                    <small>Your personal best</small>
+                  </article>
+
+                  <article className="cv-panel cv-analytics-stat">
+                    <span>Latest score</span>
+                    <strong>
+                      {analytics.latest_score !== null
+                        ? `${analytics.latest_score}%`
+                        : "—"}
+                    </strong>
+                    <small>Most recent assessment</small>
+                  </article>
+
+                  <article className="cv-panel cv-analytics-stat">
+                    <span>Total assessments</span>
+                    <strong>{analytics.total_assessments}</strong>
+                    <small>Completed evaluations</small>
+                  </article>
+                </div>
+
+                <div className="cv-analytics-grid">
+                  <div className="cv-panel cv-score-chart">
+                    <div className="cv-panel-heading">
+                      <div>
+                        <span className="cv-section-kicker">SCORE DEVELOPMENT</span>
+                        <h3>Assessment score history</h3>
+                      </div>
+                    </div>
+
+                    {analytics.score_history.length > 0 ? (
+                      <div className="cv-score-chart-bars">
+                        {analytics.score_history.slice(-8).map((item) => (
+                          <div
+                            className="cv-score-chart-column"
+                            key={item.session_id}
+                          >
+                            <strong>{item.percentage}%</strong>
+
+                            <div className="cv-score-bar-track">
+                              <div
+                                className="cv-score-bar-fill"
+                                style={{
+                                  height: `${Math.max(5, Math.min(100, item.percentage))}%`,
+                                }}
+                              />
+                            </div>
+
+                            <span>#{item.session_id}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="cv-empty-text">
+                        Complete a simulation to see your score history.
+                      </p>
+                    )}
+
+                    <p className="cv-chart-caption">
+                      Assessment scores are displayed from oldest to newest.
+                    </p>
+                  </div>
+
+                  <div className="cv-panel cv-career-analytics">
+                    <div className="cv-panel-heading">
+                      <div>
+                        <span className="cv-section-kicker">PRACTICE BREAKDOWN</span>
+                        <h3>Simulations by career</h3>
+                      </div>
+                      <BriefcaseBusiness size={20} />
+                    </div>
+
+                    {analytics.completed_simulations_by_career.length > 0 ? (
+                      <div className="cv-career-analytics-list">
+                        {analytics.completed_simulations_by_career.map((item) => (
+                          <div
+                            className="cv-career-analytics-item"
+                            key={item.career_slug}
+                          >
+                            <div>
+                              <strong>
+                                {item.career_slug
+                                  .split("-")
+                                  .map((word) =>
+                                    word.charAt(0).toUpperCase() + word.slice(1)
+                                  )
+                                  .join(" ")}
+                              </strong>
+                              <span>{item.completed_count} completed</span>
+                            </div>
+                            <BriefcaseBusiness size={19} />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="cv-empty-text">
+                        Your completed career simulations will appear here.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="cv-panel">
+                <p className="cv-empty-text">
+                  Analytics are currently unavailable. Please try again later.
+                </p>
+              </div>
+            )}
           </section>
 
           <div className="cv-dashboard-grid">

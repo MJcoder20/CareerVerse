@@ -25,6 +25,29 @@ export interface UserProgress {
   achievements: Achievement[];
 }
 
+export interface ScoreHistoryItem {
+  session_id: number;
+  career_slug: string;
+  percentage: number;
+  overall_score: number;
+  max_score: number;
+  created_at: string;
+}
+
+export interface CareerSimulationCount {
+  career_slug: string;
+  completed_count: number;
+}
+
+export interface SimulationAnalytics {
+  total_assessments: number;
+  average_score: number;
+  highest_score: number;
+  latest_score: number | null;
+  score_history: ScoreHistoryItem[];
+  completed_simulations_by_career: CareerSimulationCount[];
+}
+
 export const simulationService = {
   async start(): Promise<SimulationResponse> {
     const response = await api.post<SimulationResponse>(
@@ -57,6 +80,14 @@ export const simulationService = {
   async getProgress(): Promise<UserProgress> {
     const response = await api.get<UserProgress>(
       "/simulations/progress"
+    );
+
+    return response.data;
+  },
+
+  async getAnalytics(): Promise<SimulationAnalytics> {
+    const response = await api.get<SimulationAnalytics>(
+      "/simulations/analytics"
     );
 
     return response.data;
