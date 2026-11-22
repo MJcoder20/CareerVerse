@@ -31,12 +31,30 @@ export interface ScoreHistoryItem {
   percentage: number;
   overall_score: number;
   max_score: number;
-  created_at: string;
+  completed_at: string;
 }
 
 export interface CareerSimulationCount {
   career_slug: string;
   completed_count: number;
+}
+
+export interface SkillHistoryItem {
+  session_id: number;
+  percentage: number;
+  completed_at: string;
+}
+
+export interface SkillInsight {
+  skill: string;
+  label: string;
+  average_score: number;
+  first_score: number;
+  latest_score: number;
+  change: number;
+  trend: "improving" | "declining" | "stable";
+  assessment_count: number;
+  history: SkillHistoryItem[];
 }
 
 export interface SimulationAnalytics {
@@ -46,6 +64,7 @@ export interface SimulationAnalytics {
   latest_score: number | null;
   score_history: ScoreHistoryItem[];
   completed_simulations_by_career: CareerSimulationCount[];
+  skill_insights: SkillInsight[];
 }
 
 export const simulationService = {

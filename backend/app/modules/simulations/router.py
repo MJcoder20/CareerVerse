@@ -178,7 +178,10 @@ def get_simulation_analytics(
             Assessment.session_id == SimulationSession.id,
         )
         .filter(SimulationSession.user_id == current_user.id)
-        .order_by(Assessment.created_at.asc())
+        .order_by(
+            SimulationSession.completed_at.asc().nullslast(),
+            Assessment.created_at.asc(),
+        )
         .all()
     )
 
@@ -189,12 +192,64 @@ def get_simulation_analytics(
             "percentage": assessment.percentage,
             "overall_score": assessment.overall_score,
             "max_score": assessment.max_score,
-            "created_at": assessment.created_at,
+            "completed_at": session.completed_at or assessment.created_at,
         }
         for assessment, session in assessment_rows
     ]
 
     scores = [item["percentage"] for item in history]
+
+    # Analyze skill performance across assessment history.
+    skill_history = {}
+
+    for assessment, session in assessment_rows:
+        for skill, details in (assessment.skill_scores or {}).items():
+            if skill not in skill_history:
+                skill_history[skill] = {
+                    "label": details.get("label", skill.replace("_", " ").title()),
+                    "scores": [],
+                }
+
+            skill_history[skill]["scores"].append({
+                "session_id": assessment.session_id,
+                "percentage": details.get("percentage", 0),
+                "completed_at": session.completed_at or assessment.created_at,
+            })
+
+    skill_insights = []
+
+    for skill, data in skill_history.items():
+        scores_for_skill = data["scores"]
+
+        first_score = scores_for_skill[0]["percentage"]
+        latest_skill_score = scores_for_skill[-1]["percentage"]
+
+        average_skill_score = round(
+            sum(item["percentage"] for item in scores_for_skill)
+            / len(scores_for_skill),
+            2,
+        )
+
+        change = latest_skill_score - first_score
+
+        if change > 0:
+            trend = "improving"
+        elif change < 0:
+            trend = "declining"
+        else:
+            trend = "stable"
+
+        skill_insights.append({
+            "skill": skill,
+            "label": data["label"],
+            "average_score": average_skill_score,
+            "first_score": first_score,
+            "latest_score": latest_skill_score,
+            "change": change,
+            "trend": trend,
+            "assessment_count": len(scores_for_skill),
+            "history": scores_for_skill,
+        })
 
     # Count completed simulations for each career.
     career_rows = (
@@ -216,6 +271,7 @@ def get_simulation_analytics(
         "highest_score": max(scores) if scores else 0,
         "latest_score": scores[-1] if scores else None,
         "score_history": history,
+        "skill_insights": skill_insights,
         "completed_simulations_by_career": [
             {
                 "career_slug": career_slug,

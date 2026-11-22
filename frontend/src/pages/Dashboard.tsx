@@ -726,6 +726,8 @@ export default function Dashboard() {
                     </p>
                   </div>
 
+
+
                   <div className="cv-panel cv-career-analytics">
                     <div className="cv-panel-heading">
                       <div>
@@ -763,6 +765,71 @@ export default function Dashboard() {
                       </p>
                     )}
                   </div>
+                </div>
+                <div className="cv-panel cv-growth-insights">
+                  <div className="cv-panel-heading">
+                    <div>
+                      <span className="cv-section-kicker">SKILL DEVELOPMENT</span>
+                      <h3>Career Growth Insights</h3>
+                    </div>
+                  </div>
+
+                  {analytics.skill_insights.length > 0 ? (
+                    <div className="cv-growth-insights-grid">
+                      {analytics.skill_insights.map((skill) => (
+                        <article
+                          className="cv-growth-skill-card"
+                          key={skill.skill}
+                        >
+                          <div className="cv-growth-skill-heading">
+                            <strong>{skill.label}</strong>
+                            <span className={`cv-growth-trend ${skill.trend}`}>
+                              {skill.trend === "improving"
+                                ? "↑ Improving"
+                                : skill.trend === "declining"
+                                  ? "↓ Declining"
+                                  : "→ Stable"}
+                            </span>
+                          </div>
+
+                          <strong className="cv-growth-average">
+                            {skill.average_score}%
+                          </strong>
+
+                          <span className="cv-growth-description">
+                            Average performance
+                          </span>
+
+                          <div className="cv-growth-progress-track">
+                            <div
+                              className="cv-growth-progress-fill"
+                              style={{
+                                width: `${Math.max(0, Math.min(100, skill.latest_score))}%`,
+                              }}
+                            />
+                          </div>
+
+                          <div className="cv-growth-comparison">
+                            <span>First: {skill.first_score}%</span>
+                            <span>Latest: {skill.latest_score}%</span>
+                          </div>
+
+                          <p className="cv-growth-change">
+                            {skill.change > 0 ? "+" : ""}
+                            {skill.change} percentage points since your first assessment
+                          </p>
+
+                          <small>
+                            Based on {skill.assessment_count} assessments
+                          </small>
+                        </article>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="cv-empty-text">
+                      Complete more simulations to discover your skill development trends.
+                    </p>
+                  )}
                 </div>
               </>
             ) : (
