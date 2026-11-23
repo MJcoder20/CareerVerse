@@ -5128,6 +5128,17 @@ input {
   }
 }
 
+.achievement-queue-count {
+  margin: 8px 0 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.1);
+  padding: 6px 14px;
+  border-radius: 20px;
+  display: inline-block;
+}
+
 
 /* ===== Achievement Filters ===== */
 
@@ -6414,3 +6425,4 @@ input {
     flex-direction: column;
   }
 }
+

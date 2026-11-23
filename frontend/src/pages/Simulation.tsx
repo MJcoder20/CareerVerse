@@ -47,10 +47,10 @@ export default function Simulation() {
     xp_earned: number;
   } | null>(null);
   const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
+  const [achievementQueueTotal, setAchievementQueueTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedOption, setSelectedOption] = useState("");
-
 
   const currentAchievement =
     unlockedAchievements.length > 0
@@ -100,6 +100,9 @@ export default function Simulation() {
 
       setUnlockedAchievements(
         result.newly_unlocked_achievements ?? []
+      );
+      setAchievementQueueTotal(
+        result.newly_unlocked_achievements?.length ?? 0
       );
 
       if (result.level_up) {
@@ -270,6 +273,7 @@ export default function Simulation() {
             className="simulation-primary-button"
             onClick={() => {
               setLevelUp(null);
+              setUnlockedAchievements([]);
               navigate("/dashboard");
             }}
           >
@@ -301,7 +305,15 @@ export default function Simulation() {
           </div>
 
           <p className="level-up-eyebrow">NEW ACHIEVEMENT UNLOCKED</p>
-
+          <p className="achievement-queue-count">
+            Achievement {achievementQueueTotal - unlockedAchievements.length + 1} of {achievementQueueTotal}
+          </p>
+          <p className="achievement-queue-count">
+            Achievement {unlockedAchievements.length > 0
+              ? unlockedAchievements.length -
+                (unlockedAchievements.length - 1)
+              : 0} pending
+          </p>
           <h2>{currentAchievement.title}</h2>
 
           <p className="level-up-message">

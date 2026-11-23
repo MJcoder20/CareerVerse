@@ -112,15 +112,6 @@ def check_career_goal_milestones(db, user_id):
         round(completed_simulations / goal.target_simulations * 100),
     )
 
-    xp_progress = min(
-        100,
-        round(user.total_xp / goal.target_xp * 100),
-    )
-
-    overall_progress = round(
-        (simulation_progress + xp_progress) / 2
-    )
-
     milestones = [
         (25, "career_goal_25"),
         (50, "career_goal_50"),
@@ -131,12 +122,20 @@ def check_career_goal_milestones(db, user_id):
     newly_unlocked = []
 
     for target, achievement_key in milestones:
+        xp_progress = min(
+            100,
+            round(user.total_xp / goal.target_xp * 100),
+        )
+
+        overall_progress = round(
+            (simulation_progress + xp_progress) / 2
+        )
+
         if overall_progress >= target:
             if unlock_achievement(db, user_id, achievement_key):
                 newly_unlocked.append(achievement_key)
 
     return newly_unlocked
-
 
 def award_simulation_rewards(db, session):
     if session.xp_awarded:
