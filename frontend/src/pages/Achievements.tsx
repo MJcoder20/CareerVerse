@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import {
   Trophy,
@@ -25,12 +24,28 @@ function getAchievementIcon(key: string) {
   switch (key) {
     case "first_simulation":
       return <Star size={24} />;
+
     case "career_explorer_3":
       return <Target size={24} />;
+
     case "rising_professional_5":
       return <Zap size={24} />;
+
     case "high_performer_27":
       return <Trophy size={24} />;
+
+    case "career_goal_25":
+      return <Target size={24} />;
+
+    case "career_goal_50":
+      return <Award size={24} />;
+
+    case "career_goal_75":
+      return <Zap size={24} />;
+
+    case "career_goal_100":
+      return <Trophy size={24} />;
+
     default:
       return <Award size={24} />;
   }
@@ -57,6 +72,7 @@ export default function Achievements() {
   const getAchievementRarity = (key: string) => {
     switch (key) {
       case "first_simulation":
+      case "career_goal_25":
         return {
           label: "Common",
           className: "common",
@@ -64,15 +80,23 @@ export default function Achievements() {
 
       case "career_explorer_3":
       case "high_performer_27":
+      case "career_goal_50":
         return {
           label: "Rare",
           className: "rare",
         };
 
       case "rising_professional_5":
+      case "career_goal_75":
         return {
           label: "Epic",
           className: "epic",
+        };
+
+      case "career_goal_100":
+        return {
+          label: "Legendary",
+          className: "legendary",
         };
 
       default:
@@ -82,6 +106,7 @@ export default function Achievements() {
         };
     }
   };
+
   const achievements = progress?.achievements ?? [];
   const unlockedCount = achievements.filter((item) => item.unlocked).length;
 
@@ -102,7 +127,7 @@ export default function Achievements() {
   >(null);
 
   const [achievementFilter, setAchievementFilter] = useState<
-    "all" | "unlocked" | "locked" | "simulations" | "score"
+    "all" | "unlocked" | "locked" | "simulations" | "score" | "career_goal"
   >("all");
 
   const filteredAchievements = achievements.filter((achievement) => {
@@ -118,6 +143,9 @@ export default function Achievements() {
 
       case "score":
         return achievement.type === "score";
+
+      case "career_goal":
+        return achievement.type === "career_goal";
 
       default:
         return true;
@@ -348,6 +376,7 @@ export default function Achievements() {
                       ["locked", "Locked"],
                       ["simulations", "Simulation Milestones"],
                       ["score", "High Scores"],
+                      ["career_goal", "Career Goals"],
                     ] as const
                   ).map(([value, label]) => (
                     <button
@@ -410,7 +439,7 @@ export default function Achievements() {
                       </div>
 
                       {!achievement.unlocked &&
-                        achievement.type === "simulations" && (
+                        ["simulations", "career_goal"].includes(achievement.type) && (
                           <div className="achievement-progress">
                             <div className="achievement-progress-label">
                               <span>Progress</span>
@@ -584,11 +613,13 @@ export default function Achievements() {
                                   ? "simulation"
                                   : "simulations"
                               }.`
-                            : `Reach a score of at least ${selectedAchievement.target} points in a simulation.`}
+                            : selectedAchievement.type === "career_goal"
+                              ? `Reach ${selectedAchievement.target}% overall progress on your career goal.`
+                              : `Reach a score of at least ${selectedAchievement.target} points in a simulation.`} points in a simulation.`
                         </p>
                       </div>
 
-                      {selectedAchievement.type === "simulations" && (
+                      {["simulations", "career_goal"].includes(selectedAchievement.type) && (
                         <div className="achievement-modal-progress">
                           <div className="achievement-progress-label">
                             <span>Your progress</span>

@@ -7,6 +7,7 @@ from app.models.user import User
 from app.models.career_goal import CareerGoal
 from app.models.simulation import SimulationSession
 from app.schemas.career_goal import CareerGoalCreate
+from app.modules.simulations.service import check_career_goal_milestones
 
 
 router = APIRouter()
@@ -82,6 +83,13 @@ def create_career_goal(
     db.commit()
     db.refresh(goal)
 
+    db.add(goal)
+
+    check_career_goal_milestones(db, current_user.id)
+
+    db.commit()
+    db.refresh(goal)
+
     return goal
 
 
@@ -105,6 +113,7 @@ def update_career_goal(
     goal.target_simulations = goal_data.target_simulations
     goal.target_xp = goal_data.target_xp
 
+    check_career_goal_milestones(db, current_user.id)
     db.commit()
     db.refresh(goal)
 

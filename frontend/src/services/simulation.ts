@@ -8,7 +8,7 @@ export interface Achievement {
   title: string;
   description: string;
   target: number;
-  type: "simulations" | "score";
+  type: "simulations" | "score" | "career_goal";
   unlocked: boolean;
   unlocked_at: string | null;
   progress: number;

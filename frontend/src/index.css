@@ -5314,6 +5314,11 @@ input {
   background: #fff3e5;
 }
 
+.achievement-rarity.legendary {
+  color: #b7791f;
+  background: #fef3c7;
+}
+
 /* Dashboard Achievement Showcase */
 .cv-achievement-showcase {
   background: var(--surface);
@@ -6211,5 +6216,201 @@ input {
 
   .cv-growth-insights {
     padding: 18px;
+  }
+}
+
+.cv-activity-period-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cv-activity-period-controls button {
+  padding: 7px 14px;
+  border: 1px solid var(--border-color, #dce2ea);
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cv-activity-period-controls button.active {
+  background: var(--primary-color, #3157a4);
+  border-color: var(--primary-color, #3157a4);
+  color: white;
+}
+
+.cv-activity-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 12px 0 18px;
+  color: var(--text-muted, #7b8494);
+  font-size: 0.9rem;
+}
+
+.cv-activity-summary strong {
+  color: var(--text-primary, #25324a);
+  font-size: 1.25rem;
+}
+
+.cv-activity-chart {
+  width: 100%;
+  margin-bottom: 24px;
+  overflow-x: auto;
+}
+
+.cv-activity-chart-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 100%;
+  min-height: 180px;
+  padding: 12px 4px 0;
+}
+
+.cv-activity-chart-column {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  min-width: 0;
+  height: 180px;
+}
+
+.cv-activity-chart-count {
+  min-height: 16px;
+  font-size: 0.75rem;
+  color: var(--text-muted, #7b8494);
+}
+
+.cv-activity-chart-track {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  max-width: 32px;
+  height: 115px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--border-color, #e8edf3);
+}
+
+.cv-activity-chart-bar {
+  width: 100%;
+  min-height: 0;
+  border-radius: 6px;
+  background: var(--primary-color, #3157a4);
+  transition: height 0.3s ease;
+}
+
+.cv-activity-chart-label {
+  color: var(--text-muted, #7b8494);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .cv-activity-chart-bars {
+    justify-content: flex-start;
+    gap: 10px;
+  }
+
+  .cv-activity-chart-column {
+    flex: 0 0 32px;
+  }
+}
+
+
+.career-goal-milestones {
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border-color, #e5eaf0);
+}
+
+.career-goal-milestones-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.career-goal-milestones-heading > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.career-goal-milestones-heading span {
+  color: var(--text-muted, #7b8494);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.career-goal-milestones-heading strong {
+  font-size: 1.8rem;
+  color: var(--text-primary, #25324a);
+}
+
+.career-goal-milestones-heading small {
+  color: var(--text-muted, #7b8494);
+  font-size: 0.8rem;
+}
+
+.career-goal-milestone-track {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.career-goal-milestone {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted, #7b8494);
+  font-size: 0.75rem;
+}
+
+.career-goal-milestone-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 25px;
+  height: 25px;
+  border: 2px solid var(--border-color, #dce2ea);
+  border-radius: 50%;
+  background: var(--surface-color, #fff);
+  font-weight: 700;
+}
+
+.career-goal-milestone.completed .career-goal-milestone-dot {
+  border-color: var(--primary-color, #3157a4);
+  background: var(--primary-color, #3157a4);
+  color: white;
+}
+
+.career-goal-milestone.completed {
+  color: var(--primary-color, #3157a4);
+  font-weight: 700;
+}
+
+.career-goal-next-milestone {
+  margin: 18px 0 0;
+  color: var(--text-muted, #7b8494);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 600px) {
+  .career-goal-milestones-heading {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

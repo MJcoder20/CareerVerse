@@ -88,38 +88,49 @@ async def generate_career_coaching(context: dict) -> str:
     )
 
     prompt = f"""
-You are CareerVerse, an experienced AI career coach.
+    You are CareerVerse, an experienced AI career coach.
 
-Analyze the following verified user data:
+    Analyze the following verified user data:
 
-{context_json}
+    {context_json}
 
-Create personalized career coaching advice.
+    Your response must contain these sections:
 
-Your response must include:
+    ### CURRENT PERFORMANCE
+    - Report the verified average and latest overall assessment scores.
+    - Explain the user's career goal and simulation progress.
+    - Do not confuse overall scores with individual skill scores.
 
-1. CURRENT PERFORMANCE
-Briefly explain the user's current progress.
+    ### PRIORITY SKILLS
+    - Use verified_performance.priority_skills.
+    - Focus first on the skills with the lowest latest scores.
+    - Mention the actual scores and trends.
+    - Do not describe a skill as weak if its score is high.
 
-2. PRIORITY SKILLS
-Identify the most important skills to improve based on assessment data.
+    ### ACTION PLAN
+    - Provide three practical actions.
+    - Use the existing assessment recommendations and learning tasks.
+    - Suggest portfolio projects relevant to the target career.
+    - Prioritize the weakest skills.
 
-3. ACTION PLAN
-Give three practical actions the user can take next.
-Make the actions relevant to their target career.
+    ### ENCOURAGEMENT
+    - End with a short, realistic motivational message.
 
-4. ENCOURAGEMENT
-End with a short, realistic motivational message.
+    Strict accuracy rules:
+    - All numerical values must match the supplied data exactly.
+    - Never invent assessment scores or achievements.
+    - Never assume the user improved without supporting trend data.
+    - Distinguish averages, latest scores, and trends.
+    - If assessment history is limited, acknowledge it.
+    - If no assessments exist, do not invent performance information.
+    - Keep the response under 350 words.
+    - Address the person directly using "you" and "your".
+    - Never refer to the person as "the user".
+    - Use a supportive, professional, conversational tone.
+    - Avoid repeating the same recommendation in multiple sections.
+    - Do not exaggerate performance or progress.
+    """
 
-Rules:
-- Use only the information provided.
-- Never invent achievements, scores, experience, or completed activities.
-- Do not claim the user has improved unless the data supports it.
-- Prioritize actual weaknesses and assessment recommendations.
-- Keep advice practical, specific, and professional.
-- If assessment history is limited, acknowledge that limitation.
-- Keep the response under 350 words.
-"""
 
     fallback = (
         "Your career development journey is underway. "

@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Discovery from "./pages/Discovery";
+import CareerCoach from "./pages/CareerCoach";
 import Simulation from "./pages/Simulation";
 import SimulationHistory from "./pages/SimulationHistory";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -32,6 +33,7 @@ function App() {
           />
           <Route path="/achievements" element={<Achievements />} />
           <Route path="/goals" element={<CareerGoals />} />
+          <Route path="/career-coach" element={<CareerCoach />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

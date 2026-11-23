@@ -67,6 +67,76 @@ async def get_career_coaching(
             "completed_at": session.completed_at or assessment.created_at,
         })
 
+
+    # Calculate verified overall performance.
+    overall_scores = [
+        item["overall_percentage"]
+        for item in assessments
+    ]
+
+    average_overall = (
+        round(sum(overall_scores) / len(overall_scores), 2)
+        if overall_scores else 0
+    )
+
+    latest_overall = (
+        overall_scores[-1] if overall_scores else 0
+    )
+
+    # Calculate verified skill performance.
+    skill_history = {}
+
+    for assessment in assessments:
+        for skill, details in assessment["skill_scores"].items():
+            if skill not in skill_history:
+                skill_history[skill] = {
+                    "label": details.get("label", skill),
+                    "scores": [],
+                }
+
+            skill_history[skill]["scores"].append(
+                details.get("percentage", 0)
+            )
+
+    skill_insights = []
+
+    for skill, data in skill_history.items():
+        scores = data["scores"]
+
+        first_score = scores[0]
+        latest_score = scores[-1]
+
+        average_score = round(
+            sum(scores) / len(scores), 2
+        )
+
+        change = latest_score - first_score
+
+        if change > 0:
+            trend = "improving"
+        elif change < 0:
+            trend = "declining"
+        else:
+            trend = "stable"
+
+        skill_insights.append({
+            "skill": skill,
+            "label": data["label"],
+            "average_score": average_score,
+            "first_score": first_score,
+            "latest_score": latest_score,
+            "change": change,
+            "trend": trend,
+            "assessment_count": len(scores),
+        })
+
+    # Identify the weakest skills using latest scores.
+    priority_skills = sorted(
+        skill_insights,
+        key=lambda item: item["latest_score"],
+    )
+
+
     context = {
         "target_career": goal.career_role,
         "progress": {
@@ -83,11 +153,25 @@ async def get_career_coaching(
             ),
             "xp_progress": min(
                 100,
-                round(current_xp / goal.target_xp * 100),
+                round(current_xp / goal.target_xp * 100, 1),
             ),
         },
         "assessment_count": len(assessments),
         "assessment_history": assessments,
+        "verified_performance": {
+            "average_overall_score": average_overall,
+            "latest_overall_score": latest_overall,
+            "skill_insights": skill_insights,
+            "priority_skills": [
+                {
+                    "skill": item["label"],
+                    "latest_score": item["latest_score"],
+                    "average_score": item["average_score"],
+                    "trend": item["trend"],
+                }
+                for item in priority_skills
+            ],
+        },
     }
 
     coaching = await generate_career_coaching(context)

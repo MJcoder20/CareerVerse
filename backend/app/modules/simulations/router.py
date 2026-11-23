@@ -8,6 +8,7 @@ from app.core.dependencies import get_current_user
 from app.models.achievement import UserAchievement
 from app.models.user import User
 from app.models.simulation import SimulationSession
+from app.models.career_goal import CareerGoal
 
 from app.services.ai_service import generate_manager_dialogue
 from app.modules.simulations.scenario_catalog import get_scenario
@@ -95,6 +96,34 @@ ACHIEVEMENT_CATALOG = {
         "type": "score",
         "xp_reward": 75,
     },
+    "career_goal_25": {
+        "title": "Goal Starter",
+        "description": "Reach 25% overall progress on your career goal.",
+        "target": 25,
+        "type": "career_goal",
+        "xp_reward": 50,
+    },
+    "career_goal_50": {
+        "title": "Halfway Hero",
+        "description": "Reach 50% overall progress on your career goal.",
+        "target": 50,
+        "type": "career_goal",
+        "xp_reward": 100,
+    },
+    "career_goal_75": {
+        "title": "Almost There",
+        "description": "Reach 75% overall progress on your career goal.",
+        "target": 75,
+        "type": "career_goal",
+        "xp_reward": 150,
+    },
+    "career_goal_100": {
+        "title": "Goal Achiever",
+        "description": "Complete 100% of your career goal.",
+        "target": 100,
+        "type": "career_goal",
+        "xp_reward": 200,
+    },
 }
 
 
@@ -119,7 +148,30 @@ def get_user_progress(
         .all()
     )
 
+    career_goal = (
+        db.query(CareerGoal)
+        .filter(CareerGoal.user_id == current_user.id)
+        .first()
+    )
 
+    career_goal_progress = 0
+
+    if career_goal:
+        simulation_progress = min(
+            100,
+            round(completed_count / career_goal.target_simulations * 100),
+        )
+
+        xp_progress = min(
+            100,
+            round(
+                current_user.total_xp / career_goal.target_xp * 100,
+            ),
+        )
+
+        career_goal_progress = round(
+            (simulation_progress + xp_progress) / 2
+        )
     total_xp = current_user.total_xp
     level = (total_xp // 500) + 1
     xp_in_level = total_xp % 500
@@ -151,12 +203,16 @@ def get_user_progress(
                     min(completed_count, details["target"])
                     if details["type"] == "simulations"
                     else (
-                        details["target"]
-                        if any(
-                            achievement.achievement_key == key
-                            for achievement in achievements
+                        min(career_goal_progress, details["target"])
+                        if details["type"] == "career_goal"
+                        else (
+                            details["target"]
+                            if any(
+                                achievement.achievement_key == key
+                                for achievement in achievements
+                            )
+                            else 0
                         )
-                        else 0
                     )
                 ),
             }

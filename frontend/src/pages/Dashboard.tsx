@@ -47,6 +47,7 @@ export default function Dashboard() {
   const [historyLoading, setHistoryLoading] = useState(true);
   const [progressLoading, setProgressLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activityPeriod, setActivityPeriod] = useState<"week" | "month">("week");
 
   const [careerGoal, setCareerGoal] = useState<CareerGoal | null>(null);
   const [goalLoading, setGoalLoading] = useState(true);
@@ -94,6 +95,59 @@ export default function Dashboard() {
       : 0;
 
   const recentActivity = history.slice(0, 4);
+
+  const careerGoalProgress = careerGoal
+    ? Math.round(
+        (careerGoal.simulation_progress + careerGoal.xp_progress) / 2
+      )
+    : 0;
+
+  const careerGoalMilestones = [25, 50, 75, 100];
+
+  const completedGoalMilestones = careerGoalMilestones.filter(
+    (milestone) => careerGoalProgress >= milestone
+  ).length;
+
+  const nextGoalMilestone = careerGoalMilestones.find(
+    (milestone) => careerGoalProgress < milestone
+  );
+
+  const activityWindowStart = new Date();
+  activityWindowStart.setDate(
+    activityWindowStart.getDate() - (activityPeriod === "week" ? 7 : 30)
+  );
+
+  const periodAssessmentCount =
+    analytics?.score_history.filter(
+      (item) => new Date(item.completed_at) >= activityWindowStart
+    ).length ?? 0;
+
+  const activityChartData = Array.from(
+    { length: activityPeriod === "week" ? 7 : 30 },
+    (_, index) => {
+      const daysToShow = activityPeriod === "week" ? 7 : 30;
+      const date = new Date();
+
+      date.setHours(0, 0, 0, 0);
+      date.setDate(date.getDate() - (daysToShow - 1 - index));
+
+      const count =
+        analytics?.score_history.filter((item) => {
+          const completedDate = new Date(item.completed_at);
+
+          return (
+            completedDate.getFullYear() === date.getFullYear() &&
+            completedDate.getMonth() === date.getMonth() &&
+            completedDate.getDate() === date.getDate()
+          );
+        }).length ?? 0;
+
+      return {
+        date,
+        count,
+      };
+    }
+  );
 
   // Career Readiness Score
   const simulationExperienceScore = Math.min(
@@ -321,6 +375,14 @@ export default function Dashboard() {
             <span>Career Goals</span>
             <ArrowUpRight size={15} className="cv-nav-arrow" />
           </button>
+          <button
+            className="cv-nav-item"
+            onClick={() => navigateFromSidebar("/career-coach")}
+          >
+            <Sparkles size={19} />
+            <span>AI Career Coach</span>
+            <ArrowUpRight size={15} className="cv-nav-arrow" />
+          </button>
         </nav>
 
         <div className="cv-sidebar-label cv-sidebar-label-spaced">
@@ -510,6 +572,42 @@ export default function Dashboard() {
                       <small>{careerGoal.xp_progress}% completed</small>
                     </div>
                   </div>
+                  <div className="career-goal-milestones">
+                    <div className="career-goal-milestones-heading">
+                      <div>
+                        <span>OVERALL PROGRESS</span>
+                        <strong>{careerGoalProgress}%</strong>
+                      </div>
+
+                      <small>
+                        {completedGoalMilestones} of {careerGoalMilestones.length} milestones completed
+                      </small>
+                    </div>
+
+                    <div className="career-goal-milestone-track">
+                      {careerGoalMilestones.map((milestone) => (
+                        <div
+                          key={milestone}
+                          className={`career-goal-milestone ${
+                            careerGoalProgress >= milestone ? "completed" : ""
+                          }`}
+                        >
+                          <div className="career-goal-milestone-dot">
+                            {careerGoalProgress >= milestone && "✓"}
+                          </div>
+                          <span>{milestone}%</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <p className="career-goal-next-milestone">
+                      {careerGoal.is_completed
+                        ? "Congratulations! You've achieved your career goal."
+                        : nextGoalMilestone
+                          ? `Next milestone: reach ${nextGoalMilestone}% overall progress.`
+                          : "You're almost there!"}
+                    </p>
+                  </div>
                 </div>
               ) : (
                 <div className="cv-panel">
@@ -645,7 +743,64 @@ export default function Dashboard() {
                 </span>
                 <h2>Career Progress Analytics</h2>
               </div>
-              <span className="cv-muted-label">Assessment history</span>
+              <div className="cv-activity-period-controls">
+                <button
+                  className={activityPeriod === "week" ? "active" : ""}
+                  onClick={() => setActivityPeriod("week")}
+                >
+                  7 days
+                </button>
+
+                <button
+                  className={activityPeriod === "month" ? "active" : ""}
+                  onClick={() => setActivityPeriod("month")}
+                >
+                  30 days
+                </button>
+              </div>
+            </div>
+
+            <div className="cv-activity-summary">
+              <strong>{periodAssessmentCount}</strong>
+              <span>
+                assessments in the last {activityPeriod === "week" ? "7 days" : "30 days"}
+              </span>
+            </div>
+
+            <div className="cv-activity-chart">
+              <div className="cv-activity-chart-bars">
+                {activityChartData.map((item, index) => {
+                  const maxCount = Math.max(
+                    1,
+                    ...activityChartData.map((day) => day.count)
+                  );
+
+                  const barHeight = (item.count / maxCount) * 100;
+
+                  return (
+                    <div className="cv-activity-chart-column" key={index}>
+                      <span className="cv-activity-chart-count">
+                        {item.count > 0 ? item.count : ""}
+                      </span>
+
+                      <div className="cv-activity-chart-track">
+                        <div
+                          className="cv-activity-chart-bar"
+                          style={{ height: `${barHeight}%` }}
+                          title={`${item.count} assessments`}
+                        />
+                      </div>
+
+                      <span className="cv-activity-chart-label">
+                        {item.date.toLocaleDateString("en", {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             {analyticsLoading ? (
@@ -711,7 +866,12 @@ export default function Dashboard() {
                               />
                             </div>
 
-                            <span>#{item.session_id}</span>
+                            <span>
+                              {new Date(item.completed_at).toLocaleDateString("en", {
+                                month: "short",
+                                day: "numeric",
+                              })}
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -722,7 +882,7 @@ export default function Dashboard() {
                     )}
 
                     <p className="cv-chart-caption">
-                      Assessment scores are displayed from oldest to newest.
+                      Your assessment scores over time, from oldest to newest.
                     </p>
                   </div>
 

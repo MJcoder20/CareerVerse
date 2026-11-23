@@ -1,4 +1,3 @@
-
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
@@ -8,6 +7,7 @@ from app.models.simulation import SimulationSession
 from app.models.simulation_event import SimulationEvent
 from app.models.user import User
 from app.models.achievement import UserAchievement
+from app.models.career_goal import CareerGoal
 from app.modules.simulations.scenario_catalog import get_scenario
 
 
@@ -39,6 +39,10 @@ ACHIEVEMENT_XP_REWARDS = {
     "career_explorer_3": 100,
     "rising_professional_5": 150,
     "high_performer_27": 75,
+    "career_goal_25": 50,
+    "career_goal_50": 100,
+    "career_goal_75": 150,
+    "career_goal_100": 200,
 }
 
 
@@ -77,6 +81,61 @@ def unlock_achievement(db, user_id, achievement_key):
     )
 
     return True
+
+
+def check_career_goal_milestones(db, user_id):
+    goal = (
+        db.query(CareerGoal)
+        .filter(CareerGoal.user_id == user_id)
+        .first()
+    )
+
+    if not goal:
+        return []
+
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        return []
+
+    completed_simulations = (
+        db.query(SimulationSession)
+        .filter(
+            SimulationSession.user_id == user_id,
+            SimulationSession.status == "completed",
+        )
+        .count()
+    )
+
+    simulation_progress = min(
+        100,
+        round(completed_simulations / goal.target_simulations * 100),
+    )
+
+    xp_progress = min(
+        100,
+        round(user.total_xp / goal.target_xp * 100),
+    )
+
+    overall_progress = round(
+        (simulation_progress + xp_progress) / 2
+    )
+
+    milestones = [
+        (25, "career_goal_25"),
+        (50, "career_goal_50"),
+        (75, "career_goal_75"),
+        (100, "career_goal_100"),
+    ]
+
+    newly_unlocked = []
+
+    for target, achievement_key in milestones:
+        if overall_progress >= target:
+            if unlock_achievement(db, user_id, achievement_key):
+                newly_unlocked.append(achievement_key)
+
+    return newly_unlocked
 
 
 def award_simulation_rewards(db, session):
@@ -345,6 +404,10 @@ def submit_decision(db, session, option_id):
 
         newly_unlocked_achievements = award_simulation_rewards(
             db, session
+        )
+
+        newly_unlocked_achievements.extend(
+            check_career_goal_milestones(db, session.user_id)
         )
 
         # Calculate the new level after all rewards.
