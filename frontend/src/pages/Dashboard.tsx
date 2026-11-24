@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Compass,
@@ -38,6 +38,7 @@ import type { SimulationHistoryItem } from "../types/simulationHistory";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuth();
 
   const [history, setHistory] = useState<SimulationHistoryItem[]>([]);
@@ -52,7 +53,8 @@ export default function Dashboard() {
   const [careerGoal, setCareerGoal] = useState<CareerGoal | null>(null);
   const [goalLoading, setGoalLoading] = useState(true);
 
-  useEffect(() => {
+
+  const loadDashboardData = useCallback(() => {
     simulationService
       .getHistory()
       .then(setHistory)
@@ -76,6 +78,11 @@ export default function Dashboard() {
       .catch(console.error)
       .finally(() => setGoalLoading(false));
   }, []);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData, location.key]);
+
 
   const completed = history.filter(
     (item) => item.status === "completed"
@@ -252,14 +259,35 @@ export default function Dashboard() {
       new Date(a.unlocked_at ?? 0).getTime()
   )[0];
 
+
   const recentAchievements = (progress?.achievements ?? [])
     .filter((achievement) => achievement.unlocked)
-    .sort(
-      (a, b) =>
+    .sort((a, b) => {
+      const rarityOrder: Record<string, number> = {
+        Legendary: 4,
+        Epic: 3,
+        Rare: 2,
+        Common: 1,
+      };
+
+      const rarityA = getAchievementRarity(a.key).label;
+      const rarityB = getAchievementRarity(b.key).label;
+
+      const rarityDifference =
+        (rarityOrder[rarityB] ?? 0) -
+        (rarityOrder[rarityA] ?? 0);
+
+      if (rarityDifference !== 0) {
+        return rarityDifference;
+      }
+
+      return (
         new Date(b.unlocked_at ?? 0).getTime() -
         new Date(a.unlocked_at ?? 0).getTime()
-    )
-    .slice(0, 3);
+      );
+    })
+    .slice(0, 4);
+
 
   const careerMilestones = [
     {
@@ -1039,50 +1067,6 @@ export default function Dashboard() {
                 <span>{progress?.xp_in_level ?? 0} XP earned this level</span>
                 <span>{progress?.xp_to_next_level ?? 500} XP to next level</span>
               </div>
-            </section>
-
-            <section className="cv-panel cv-achievement-panel">
-              <div className="cv-panel-heading">
-                <div>
-                  <span className="cv-section-kicker">YOUR MILESTONES</span>
-                  <h3>Achievements</h3>
-                </div>
-                <div className="cv-panel-icon"><Trophy size={19} /></div>
-              </div>
-
-              {progressLoading ? (
-                <p className="cv-empty-text">Loading achievements...</p>
-              ) : unlockedAchievements.length > 0 ? (
-                <div className="cv-achievement-list">
-                  {unlockedAchievements.slice(0, 4).map((achievement) => (
-                    <div className="cv-achievement-item" key={achievement.key}>
-                      <div className="cv-achievement-icon">
-                        {getAchievementIcon(achievement.key)}
-                      </div>
-                      <div className="cv-achievement-details">
-                        <strong>{achievement.title}</strong>
-                        <span>{achievement.description}</span>
-                        <small>
-                          Unlocked{" "}
-                          {achievement.unlocked_at
-                            ? new Date(achievement.unlocked_at).toLocaleDateString()
-                            : "Date unavailable"}
-                        </small>
-                      </div>
-                      <Star size={15} className="cv-achievement-star" />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="cv-empty-state">
-                  <div className="cv-empty-icon"><Trophy size={25} /></div>
-                  <strong>Your first achievement awaits</strong>
-                  <p>Complete a simulation to start collecting milestones.</p>
-                  <button onClick={() => navigate("/simulation")}>
-                    Start a simulation <ArrowRight size={15} />
-                  </button>
-                </div>
-              )}
             </section>
 
 

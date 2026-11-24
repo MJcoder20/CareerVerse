@@ -1,6 +1,9 @@
+
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import { useAuth } from "../context/AuthContext";
+import { authService } from "../services/auth";
 
 export default function Login() {
   const { login } = useAuth();
@@ -9,20 +12,58 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [verificationRequired, setVerificationRequired] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
+    setSuccess("");
+    setVerificationRequired(false);
     setLoading(true);
 
     try {
       await login({ email, password });
       navigate("/dashboard");
-    } catch {
-      setError("Invalid email or password.");
+    } catch (err) {
+      if (axios.isAxiosError<{ detail?: string }>(err)) {
+        const detail = err.response?.data?.detail;
+
+        if (
+          err.response?.status === 403 &&
+          detail?.toLowerCase().includes("verify")
+        ) {
+          setError(detail);
+          setVerificationRequired(true);
+        } else {
+          setError(detail || "Invalid email or password.");
+        }
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleResendVerification() {
+    setError("");
+    setSuccess("");
+    setResending(true);
+
+    try {
+      const response = await authService.resendVerification(email);
+      setSuccess(response.message);
+    } catch (err) {
+      if (axios.isAxiosError<{ detail?: string }>(err)) {
+        setError(err.response?.data?.detail || "Could not send the email.");
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
+    } finally {
+      setResending(false);
     }
   }
 
@@ -33,9 +74,11 @@ export default function Login() {
         <p>Continue exploring your future with CareerVerse.</p>
 
         {error && <div className="error-message">{error}</div>}
+        {success && <p className="success-message">{success}</p>}
 
-        <label>Email</label>
+        <label htmlFor="email">Email</label>
         <input
+          id="email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -43,8 +86,9 @@ export default function Login() {
           required
         />
 
-        <label>Password</label>
+        <label htmlFor="password">Password</label>
         <input
+          id="password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -55,6 +99,16 @@ export default function Login() {
         <button type="submit" disabled={loading}>
           {loading ? "Signing in..." : "Sign In"}
         </button>
+
+        {verificationRequired && (
+          <button
+            type="button"
+            onClick={handleResendVerification}
+            disabled={resending || !email}
+          >
+            {resending ? "Sending..." : "Resend verification email"}
+          </button>
+        )}
 
         <p className="auth-footer">
           Don't have an account? <Link to="/register">Create one</Link>

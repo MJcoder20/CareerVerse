@@ -1,3 +1,4 @@
+
 import {
   createContext,
   useContext,
@@ -30,7 +31,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       authService
         .getMe()
         .then(setUser)
-        .catch(() => authService.logout())
+        .catch(() => {
+          authService.logout();
+          setUser(null);
+        })
         .finally(() => setLoading(false));
     } else {
       setLoading(false);
@@ -39,13 +43,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function login(data: LoginData) {
     await authService.login(data);
-    const currentUser = await authService.getMe();
-    setUser(currentUser);
+
+    try {
+      const currentUser = await authService.getMe();
+      setUser(currentUser);
+    } catch (error) {
+      authService.logout();
+      setUser(null);
+      throw error;
+    }
   }
 
   async function register(data: RegisterData) {
     await authService.register(data);
-    await login({ email: data.email, password: data.password });
   }
 
   function logout() {
@@ -54,9 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider
-      value={{ user, loading, login, register, logout }}
-    >
+    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

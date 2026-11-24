@@ -281,6 +281,34 @@ input {
   }
 }
 
+.success-message {
+  padding: 14px 16px;
+  margin: 16px 0;
+  border-radius: 10px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  line-height: 1.6;
+}
+
+.auth-button {
+  display: inline-block;
+  width: 100%;
+  margin-top: 18px;
+  padding: 13px 18px;
+  border-radius: 8px;
+  background: #2563eb;
+  color: white;
+  text-align: center;
+  text-decoration: none;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+
+.auth-button:hover {
+  background: #1d4ed8;
+}
+
 
 /* =========================================
    REGISTER PAGE
@@ -2350,6 +2378,65 @@ input {
   margin: 7px;
 }
 
+
+.simulation-completion-icon {
+  width: 68px;
+  height: 68px;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #238b69;
+  background: #e0f3e9;
+  border-radius: 50%;
+}
+
+.simulation-completion-summary {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 22px 0;
+}
+
+.simulation-completion-summary > div {
+  min-width: 120px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #d9eee5;
+  border-radius: 12px;
+}
+
+.simulation-completion-summary strong {
+  color: #238b69;
+  font-size: 21px;
+}
+
+.simulation-completion-summary span {
+  color: #647a70;
+  font-size: 12px;
+}
+
+.simulation-completion-message {
+  max-width: 450px;
+  margin: 0 auto 20px;
+  line-height: 1.7;
+}
+
+@media (max-width: 480px) {
+  .simulation-completion-summary {
+    gap: 10px;
+  }
+
+  .simulation-completion-summary > div {
+    min-width: 0;
+    flex: 1;
+  }
+}
+
+
 .simulation-loading,
 .simulation-error {
   max-width: 700px;
@@ -2971,7 +3058,15 @@ input {
   }
 
   .cv-dashboard-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+  }
+
+  .cv-dashboard-grid > .cv-level-panel,
+  .cv-dashboard-grid > .cv-latest-achievement {
+    height: 100%;
+    min-height: 100%;
+    box-sizing: border-box;
   }
 }
 
@@ -4681,8 +4776,11 @@ input {
   display: flex;
   align-items: center;
   gap: 18px;
-  margin: 20px 0 28px;
+  margin: 0;
   padding: 22px 24px;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
   background: linear-gradient(120deg, #F2EDFF, #FFF8EF);
   border: 1px solid #E6DDFB;
   border-radius: var(--radius);
@@ -6426,3 +6524,110 @@ input {
   }
 }
 
+/* Achievement Toast Notification */
+.achievement-toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+  width: min(380px, calc(100vw - 32px));
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-left: 4px solid #16a34a;
+  border-radius: 14px;
+  box-shadow: 0 12px 35px rgba(15, 23, 42, 0.16);
+  animation: achievement-toast-enter 0.35s ease-out;
+}
+
+.achievement-toast-icon {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d97706;
+  background: #fef3c7;
+  border-radius: 12px;
+}
+
+.achievement-toast-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.achievement-toast-label {
+  display: block;
+  margin-bottom: 5px;
+  color: #16a34a;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.achievement-toast-content strong {
+  display: block;
+  color: #111827;
+  font-size: 16px;
+  font-weight: 750;
+}
+
+.achievement-toast-content p {
+  margin: 5px 0 9px;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.achievement-toast-xp {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #d97706;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.achievement-toast-close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  color: #94a3b8;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.achievement-toast-close:hover {
+  color: #1f2937;
+  background: #f1f5f9;
+}
+
+@keyframes achievement-toast-enter {
+  from {
+    opacity: 0;
+    transform: translateX(25px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .achievement-toast {
+    top: 12px;
+    right: 12px;
+    width: calc(100vw - 24px);
+    padding: 14px;
+  }
+}

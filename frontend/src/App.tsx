@@ -6,6 +6,7 @@ import Achievements from "./pages/Achievements";
 import CareerGoals from "./pages/CareerGoals";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import VerifyEmail from "./pages/VerifyEmail";
 import Dashboard from "./pages/Dashboard";
 import Discovery from "./pages/Discovery";
 import CareerCoach from "./pages/CareerCoach";
@@ -20,6 +21,7 @@ function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
@@ -27,10 +29,7 @@ function App() {
           <Route path="/simulation" element={<Simulation />} />
           <Route path="/simulation/:sessionId" element={<Simulation />} />
           <Route path="/history" element={<SimulationHistory />} />
-          <Route
-            path="/assessment/:sessionId"
-            element={<Assessment />}
-          />
+          <Route path="/assessment/:sessionId" element={<Assessment />} />
           <Route path="/achievements" element={<Achievements />} />
           <Route path="/goals" element={<CareerGoals />} />
           <Route path="/career-coach" element={<CareerCoach />} />

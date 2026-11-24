@@ -1,9 +1,11 @@
+
 import { api } from "./api";
 import type {
   User,
   LoginData,
   RegisterData,
   TokenResponse,
+  MessageResponse,
 } from "../types/auth";
 
 export const authService = {
@@ -20,6 +22,21 @@ export const authService = {
 
   async getMe(): Promise<User> {
     const response = await api.get<User>("/auth/me");
+    return response.data;
+  },
+
+  async verifyEmail(token: string): Promise<MessageResponse> {
+    const response = await api.get<MessageResponse>("/auth/verify-email", {
+      params: { token },
+    });
+    return response.data;
+  },
+
+  async resendVerification(email: string): Promise<MessageResponse> {
+    const response = await api.post<MessageResponse>(
+      "/auth/resend-verification",
+      { email }
+    );
     return response.data;
   },
 

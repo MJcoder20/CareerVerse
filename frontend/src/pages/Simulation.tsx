@@ -31,6 +31,26 @@ const ACHIEVEMENT_DETAILS: Record<
     description: "Score at least 27 points in a simulation.",
     xp_reward: 75,
   },
+    career_goal_25: {
+    title: "Goal Starter",
+    description: "Reach 25% overall progress on your career goal.",
+    xp_reward: 50,
+  },
+  career_goal_50: {
+    title: "Halfway Hero",
+    description: "Reach 50% overall progress on your career goal.",
+    xp_reward: 100,
+  },
+  career_goal_75: {
+    title: "Almost There",
+    description: "Reach 75% overall progress on your career goal.",
+    xp_reward: 150,
+  },
+  career_goal_100: {
+    title: "Goal Achiever",
+    description: "Reach 100% overall progress on your career goal.",
+    xp_reward: 200,
+  },
 };
 
 
@@ -183,12 +203,37 @@ export default function Simulation() {
             </div>
           )}
 
+
           {simulation.status === "completed" ? (
             <div className="simulation-completed">
+              <div className="simulation-completion-icon">
+                <Trophy size={36} />
+              </div>
+
               <h2>Simulation completed!</h2>
+
               <p>
                 Your final score is{" "}
                 <strong>{simulation.score} points</strong>.
+              </p>
+
+              <div className="simulation-completion-summary">
+                <div>
+                  <strong>
+                    {simulation.completed_steps}/{simulation.total_steps}
+                  </strong>
+                  <span>Steps completed</span>
+                </div>
+
+                <div>
+                  <strong>{simulation.progress}%</strong>
+                  <span>Completion</span>
+                </div>
+              </div>
+
+              <p className="simulation-completion-message">
+                Great work! Your performance has been recorded.
+                Keep practicing to improve your career readiness.
               </p>
 
               <button
@@ -233,6 +278,7 @@ export default function Simulation() {
               </button>
             </div>
           )}
+
         </section>
       )}
 
@@ -337,8 +383,12 @@ export default function Simulation() {
           <button
             className="level-up-dismiss"
             onClick={() => {
+              navigate("/achievements", {
+                state: {
+                  newlyUnlockedAchievements: unlockedAchievements,
+                },
+              });
               setUnlockedAchievements([]);
-              navigate("/achievements");
             }}
           >
             View All Achievements

@@ -1,3 +1,4 @@
+
 import jwt
 from jwt import InvalidTokenError
 from fastapi import Depends, HTTPException, status
@@ -21,8 +22,15 @@ def get_current_user(
             settings.SECRET_KEY,
             algorithms=[settings.ALGORITHM],
         )
+
+        # Accept existing access tokens without a type claim,
+        # but never accept email verification tokens as access tokens.
+        if payload.get("type", "access") != "access":
+            raise InvalidTokenError("Invalid token type")
+
         user_id = int(payload["sub"])
-    except (InvalidTokenError, KeyError, ValueError):
+
+    except (InvalidTokenError, KeyError, ValueError, TypeError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
@@ -35,6 +43,12 @@ def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found or inactive",
+        )
+
+    if not user.is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Please verify your email before accessing this resource",
         )
 
     return user

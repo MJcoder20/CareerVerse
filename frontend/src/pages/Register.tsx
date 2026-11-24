@@ -1,15 +1,17 @@
+
 import { useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 
 export default function Register() {
   const { register } = useAuth();
-  const navigate = useNavigate();
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
@@ -18,21 +20,76 @@ export default function Register() {
     setSubmitting(true);
 
     try {
-      await register({ full_name: fullName, email, password });
-      navigate("/dashboard");
-    } catch {
-      setError("Registration failed. This email may already be registered.");
+      await register({
+        full_name: fullName,
+        email,
+        password,
+      });
+
+      setSuccess(true);
+    } catch (err) {
+      if (axios.isAxiosError<{ detail?: string }>(err)) {
+        const detail = err.response?.data?.detail;
+
+        if (err.response?.status === 503) {
+          setError(
+            "Your account may have been created, but the verification email could not be sent. Please try requesting a new email from the login page."
+          );
+        } else {
+          setError(detail || "Registration failed. Please try again.");
+        }
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
     } finally {
       setSubmitting(false);
     }
   }
 
+  if (success) {
+    return (
+      <main className="auth-page">
+        <section className="auth-card">
+          <Link to="/" className="brand">
+            CareerVerse<span>.</span>
+          </Link>
+
+          <h1>Check your inbox!</h1>
+          <p className="subtitle">
+            Your account has been created. We sent a verification link to:
+          </p>
+
+          <p><strong>{email}</strong></p>
+
+          <p className="success-message">
+            Open the email and click the verification link to activate your
+            CareerVerse account.
+          </p>
+
+          <p className="subtitle">
+            The verification link expires after 24 hours. Check your spam
+            folder if you cannot find the email.
+          </p>
+
+          <Link to="/login" className="auth-footer">
+            Go to sign in
+          </Link>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className="auth-page">
       <section className="auth-card">
-        <Link to="/" className="brand">CareerVerse<span>.</span></Link>
+        <Link to="/" className="brand">
+          CareerVerse<span>.</span>
+        </Link>
+
         <h1>Create your account</h1>
-        <p className="subtitle">Start discovering and experiencing careers.</p>
+        <p className="subtitle">
+          Start discovering and experiencing careers.
+        </p>
 
         <form onSubmit={handleSubmit}>
           <label htmlFor="fullName">Full name</label>

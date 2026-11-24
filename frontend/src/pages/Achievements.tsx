@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Trophy,
   Star,
@@ -15,10 +15,13 @@ import {
   X,
   History as HistoryIcon, Menu, ArrowUpRight,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import { simulationService, type UserProgress } from "../services/simulation";
 import { useAuth } from "../context/AuthContext";
+import AchievementToast, {
+  type AchievementToastData,
+} from "../components/AchievementToast";
 
 function getAchievementIcon(key: string) {
   switch (key) {
@@ -53,6 +56,15 @@ function getAchievementIcon(key: string) {
 
 export default function Achievements() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const [toastQueue, setToastQueue] = useState<AchievementToastData[]>([]);
+
+  const dismissAchievementToast = useCallback((id: string) => {
+    setToastQueue((previous) =>
+      previous.filter((achievement) => achievement.id !== id)
+    );
+  }, []);
   const { user, logout } = useAuth();
 
   const [progress, setProgress] = useState<UserProgress | null>(null);
@@ -68,6 +80,31 @@ export default function Achievements() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    const keys = location.state?.newlyUnlockedAchievements;
+
+    if (!Array.isArray(keys) || !progress) return;
+
+    const newToasts = progress.achievements
+      .filter(
+        (achievement) =>
+          keys.includes(achievement.key) && achievement.unlocked
+      )
+      .map((achievement) => ({
+        id: achievement.key,
+        title: achievement.title,
+        description: achievement.description,
+        xp_reward: achievement.xp_reward,
+      }));
+
+    setToastQueue(newToasts);
+
+    navigate(location.pathname, {
+      replace: true,
+      state: null,
+    });
+  }, [location, navigate, progress]);
 
   const getAchievementRarity = (key: string) => {
     switch (key) {
@@ -164,6 +201,13 @@ export default function Achievements() {
   return (
 
     <div className="cv-dashboard">
+      {toastQueue.map((achievement) => (
+        <AchievementToast
+          key={achievement.id}
+          achievement={achievement}
+          onDismiss={dismissAchievementToast}
+        />
+      ))}
       {sidebarOpen && (
         <button
           className="cv-sidebar-overlay"
