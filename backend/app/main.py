@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.core.rate_limiter import limiter
+from app.core.logging_config import setup_logging
 from app.core.security_headers import SecurityHeadersMiddleware
 from app.core.error_handlers import (
     http_exception_handler,
@@ -18,6 +19,8 @@ from app.core.error_handlers import (
 )
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
+
+setup_logging(settings.LOG_LEVEL)
 
 app = FastAPI(
     title=settings.APP_NAME,
