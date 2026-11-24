@@ -1,3 +1,9 @@
+import logging
+
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
+from fastapi.responses import JSONResponse
+from app.core.database import engine
 from fastapi import FastAPI
 from app.core.config import settings
 from app.modules.auth.router import router as auth_router
@@ -91,4 +97,24 @@ def root():
 
 @app.get("/health")
 def health_check():
-    return {"status": "healthy"}
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+
+        return {
+            "status": "healthy",
+            "database": "connected",
+        }
+
+    except SQLAlchemyError:
+        logging.getLogger(__name__).exception(
+            "Health check failed: database unavailable"
+        )
+
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "unhealthy",
+                "database": "unavailable",
+            },
+        )
