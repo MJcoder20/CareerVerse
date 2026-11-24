@@ -1,11 +1,12 @@
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.core.email_service import send_verification_email
+from app.core.rate_limiter import limiter
 from app.core.security import (
     hash_password,
     verify_password,
@@ -41,7 +42,9 @@ def send_user_verification_email(user: User) -> None:
     response_model=UserResponse,
     status_code=status.HTTP_201_CREATED,
 )
+@limiter.limit("5/hour")
 def register_user(
+    request: Request,
     user_data: UserCreate,
     db: Session = Depends(get_db),
 ):
@@ -88,7 +91,9 @@ def register_user(
 
 
 @router.get("/verify-email")
+@limiter.limit("10/minute")
 def verify_email(
+    request: Request,
     token: str,
     db: Session = Depends(get_db),
 ):
@@ -118,12 +123,14 @@ def verify_email(
 
 
 @router.post("/resend-verification")
+@limiter.limit("3/hour")
 def resend_verification(
-    request: EmailVerificationRequest,
+    request: Request,
+    email_request: EmailVerificationRequest,
     db: Session = Depends(get_db),
 ):
     user = db.query(User).filter(
-        User.email == request.email
+        User.email == email_request.email
     ).first()
 
     if user and not user.is_verified and user.is_active:
@@ -144,7 +151,9 @@ def resend_verification(
 
 
 @router.post("/login", response_model=Token)
+@limiter.limit("5/minute")
 def login_user(
+    request: Request,
     user_data: UserLogin,
     db: Session = Depends(get_db),
 ):

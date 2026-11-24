@@ -7,11 +7,20 @@ from app.modules.goals.router import router as goals_router
 from app.modules.career_coach.router import router as career_coach_router
 from app.modules.simulations.roadmap_router import router as roadmap_router
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from app.core.rate_limiter import limiter
 
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     debug=settings.DEBUG,
+)
+
+app.state.limiter = limiter
+app.add_exception_handler(
+    RateLimitExceeded,
+    _rate_limit_exceeded_handler,
 )
 
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
