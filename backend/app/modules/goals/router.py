@@ -56,6 +56,7 @@ def get_career_goal(
     }
 
 
+
 @router.post("", status_code=status.HTTP_201_CREATED)
 def create_career_goal(
     goal_data: CareerGoalCreate,
@@ -79,18 +80,17 @@ def create_career_goal(
         target_xp=goal_data.target_xp,
     )
 
-    db.add(goal)
-    db.commit()
-    db.refresh(goal)
-
-    db.add(goal)
-
-    check_career_goal_milestones(db, current_user.id)
-
-    db.commit()
-    db.refresh(goal)
+    try:
+        db.add(goal)
+        check_career_goal_milestones(db, current_user.id)
+        db.commit()
+        db.refresh(goal)
+    except Exception:
+        db.rollback()
+        raise
 
     return goal
+
 
 
 @router.put("")

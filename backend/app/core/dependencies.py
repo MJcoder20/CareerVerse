@@ -1,4 +1,3 @@
-
 import jwt
 from jwt import InvalidTokenError
 from fastapi import Depends, HTTPException, status
@@ -23,9 +22,8 @@ def get_current_user(
             algorithms=[settings.ALGORITHM],
         )
 
-        # Accept existing access tokens without a type claim,
-        # but never accept email verification tokens as access tokens.
-        if payload.get("type", "access") != "access":
+        # Only accept tokens explicitly issued as access tokens.
+        if payload.get("type") != "access":
             raise InvalidTokenError("Invalid token type")
 
         user_id = int(payload["sub"])

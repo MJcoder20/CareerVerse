@@ -103,9 +103,6 @@ def update_roadmap_progress(
     db.commit()
     db.refresh(assessment)
 
-    db.commit()
-    db.refresh(assessment)
-
     return {
         "message": "Roadmap progress saved successfully.",
         "completed_tasks": assessment.roadmap_progress

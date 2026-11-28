@@ -1,4 +1,8 @@
+from datetime import datetime, timedelta, timezone
+import jwt
 
+from app.core.config import settings
+from app.core.rate_limiter import limiter
 from urllib.parse import urlparse, parse_qs
 
 import pytest
@@ -294,3 +298,117 @@ def test_get_profile_with_token(client, verified_user):
     assert response.status_code == 200
     assert response.json()["email"] == verified_user.email
     assert response.json()["is_verified"] is True
+
+
+
+def test_get_profile_rejects_token_without_type(client, verified_user):
+    token = jwt.encode(
+        {
+            "sub": str(verified_user.id),
+            "exp": datetime.now(timezone.utc) + timedelta(minutes=5),
+        },
+        settings.SECRET_KEY,
+        algorithm=settings.ALGORITHM,
+    )
+
+    response = client.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Invalid or expired token"
+
+
+def test_login_inactive_user(client, test_db):
+    user = User(
+        email="inactive@example.com",
+        full_name="Inactive User",
+        hashed_password=hash_password("StrongPassword123!"),
+        is_active=False,
+        is_verified=True,
+    )
+
+    test_db.add(user)
+    test_db.commit()
+
+    response = client.post(
+        "/api/v1/auth/login",
+        json={
+            "email": user.email,
+            "password": "StrongPassword123!",
+        },
+    )
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Your account is inactive"
+
+
+def test_login_rate_limit(client, verified_user):
+    limiter.reset()
+
+    try:
+        payload = {
+            "email": verified_user.email,
+            "password": "WrongPassword123!",
+        }
+
+        responses = [
+            client.post("/api/v1/auth/login", json=payload)
+            for _ in range(6)
+        ]
+
+        assert all(
+            response.status_code == 401
+            for response in responses[:5]
+        )
+        assert responses[5].status_code == 429
+
+    finally:
+        limiter.reset()
+
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("password", "Short1!"),
+        ("password", "A" * 129),
+        ("full_name", "A"),
+        ("full_name", "A" * 151),
+        ("full_name", "   "),
+    ],
+)
+def test_register_rejects_invalid_input(client, field, value):
+    payload = {
+        "email": "validation@example.com",
+        "full_name": "Validation User",
+        "password": "StrongPassword123!",
+    }
+    payload[field] = value
+
+    response = client.post(
+        "/api/v1/auth/register",
+        json=payload,
+    )
+
+    assert response.status_code == 422
+
+
+def test_register_trims_full_name(client, monkeypatch):
+    monkeypatch.setattr(
+        "app.modules.auth.router.send_verification_email",
+        lambda email, url: None,
+    )
+
+    response = client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "trimmed@example.com",
+            "full_name": "  Trimmed User  ",
+            "password": "StrongPassword123!",
+        },
+    )
+
+    assert response.status_code == 201
+    assert response.json()["full_name"] == "Trimmed User"
