@@ -131,13 +131,32 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Create your local `.env` file using the environment variable names expected by `app/core/config.py`.
+Create a local `.env` file in the backend directory.
 
 Example configuration:
 
 ```env
+APP_NAME=CareerVerse
+APP_VERSION=0.1.0
+DEBUG=False
+LOG_LEVEL=INFO
+
 DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/careerverse
-SECRET_KEY=YOUR_SECURE_SECRET_KEY
+
+SECRET_KEY=YOUR_GENERATED_SECRET_KEY
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+FRONTEND_URL=http://localhost:5173
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=
+SMTP_PASSWORD=
+SMTP_FROM_EMAIL=
+SMTP_FROM_NAME=CareerVerse
+
+EMAIL_VERIFICATION_EXPIRE_HOURS=24
 ```
 
 Do not commit your actual `.env` file or credentials.
